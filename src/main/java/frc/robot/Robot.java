@@ -7,6 +7,9 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
+import frc.robot.subsystems.swerve.Swerve;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -20,6 +23,10 @@ public class Robot extends TimedRobot {
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+  Swerve swerve = new Swerve();
+
+  CommandPS4Controller ps4Controller = new CommandPS4Controller(0);
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -29,6 +36,15 @@ public class Robot extends TimedRobot {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+
+    swerve.setDefaultCommand(
+            // TODO these arguments are wrong, figure it out
+            new RunCommand(() -> swerve.teleopDrive(
+                    ps4Controller::getLeftX,
+                    ps4Controller::getLeftY,
+                    ps4Controller::getRightX
+            ))
+    );
   }
 
   /**
@@ -74,7 +90,12 @@ public class Robot extends TimedRobot {
 
   /** This function is called once when teleop is enabled. */
   @Override
-  public void teleopInit() {}
+  public void teleopInit() {
+    /* When is teleop, run the swerve in open loop because we don't closed loop for driving */
+    if (!Robot.isSimulation()) {
+      swerve.setClosedLoop();
+    }
+  }
 
   /** This function is called periodically during operator control. */
   @Override
@@ -98,7 +119,8 @@ public class Robot extends TimedRobot {
 
   /** This function is called once when the robot is first started up. */
   @Override
-  public void simulationInit() {}
+  public void simulationInit() {
+  }
 
   /** This function is called periodically whilst in simulation. */
   @Override
