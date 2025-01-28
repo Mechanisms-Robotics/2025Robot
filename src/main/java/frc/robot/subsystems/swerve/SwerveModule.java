@@ -73,9 +73,7 @@ public class SwerveModule extends SubsystemBase {
         // steerMotor.setIdleMode(IdleMode.kBrake);
 
         // TODO finish steer motor configuration
-    
         // TODO finish drive motor configuraiton
-
         // TODO: consider trying continuous input for steer controller because it handles shortest path
         // steerPidController.enableContinuousInput();
     }
