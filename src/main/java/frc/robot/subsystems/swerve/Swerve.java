@@ -2,15 +2,19 @@ package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Robot;
 
 import java.util.function.Supplier;
 
@@ -58,11 +62,20 @@ public class Swerve extends SubsystemBase {
              false, false,
              5, 0);
 
-    public Swerve() { 
+     private Rotation2d simHeading = new Rotation2d();
+
+     private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
+            kinematics,
+            getHeading(),
+            getModulePositions(),
+            new Pose2d()
+     );
+
+     public Swerve() {
         SmartDashboard.putData(field2d);
     }
 
-    public void zeroGyro() {
+     public void zeroGyro() {
         gyro.setYaw(0.0);
     }
 
@@ -105,6 +118,29 @@ public class Swerve extends SubsystemBase {
         brModule.setState(states[3]);
     }
 
+    public SwerveModulePosition[] getModulePositions() {
+        return new SwerveModulePosition[] {
+                flModule.getModulePosition(),
+                frModule.getModulePosition(),
+                brModule.getModulePosition(),
+                blModule.getModulePosition()
+        };
+    }
+
+    public void setPose(Pose2d pose) {
+        poseEstimator.resetPosition(getHeading(), getModulePositions(), pose);
+
+        if (Robot.isSimulation()) {
+            simHeading = pose.getRotation();
+        }
+    }
+
+    public Rotation2d getHeading() {
+        if (Robot.isSimulation())
+            return simHeading;
+        return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble()).rotateBy(new Rotation2d());
+    }
+
     public void setOpenLoop() {
         flModule.setClosedLoop(false);
         frModule.setClosedLoop(false);
@@ -119,9 +155,37 @@ public class Swerve extends SubsystemBase {
         brModule.setClosedLoop(true);
     }
 
+    public Pose2d getEstimatedPose() {
+        return poseEstimator.getEstimatedPosition();
+    }
+
     public void drawModules() {
         field2d.getObject("FL Module").setPose(
-                new Pose2d()
+            new Pose2d(
+                getEstimatedPose().getTranslation().plus(flModuleLocation.rotateBy(getHeading())),
+                flModule.getModulePosition().angle.rotateBy(getHeading())
+            )
+        );
+
+        field2d.getObject("FR Module").setPose(
+                new Pose2d(
+                        getEstimatedPose().getTranslation().plus(frModuleLocation.rotateBy(getHeading())),
+                        flModule.getModulePosition().angle.rotateBy(getHeading())
+                )
+        );
+
+        field2d.getObject("BL Module").setPose(
+                new Pose2d(
+                        getEstimatedPose().getTranslation().plus(blModuleLocation.rotateBy(getHeading())),
+                        flModule.getModulePosition().angle.rotateBy(getHeading())
+                )
+        );
+
+        field2d.getObject("BR Module").setPose(
+                new Pose2d(
+                        getEstimatedPose().getTranslation().plus(brModuleLocation.rotateBy(getHeading())),
+                        flModule.getModulePosition().angle.rotateBy(getHeading())
+                )
         );
     }
 

@@ -11,6 +11,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.RobotController;
@@ -42,6 +43,7 @@ public class SwerveModule extends SubsystemBase {
 
     private Rotation2d currentAngle = new Rotation2d();
     private Rotation2d desiredAngle = new Rotation2d();
+    private double simDistance = 0.0;
 
     private final TalonFX driveMotor;
     private final SparkMax steerMotor;
@@ -81,6 +83,13 @@ public class SwerveModule extends SubsystemBase {
             // set percent scaled by max speed, drives full speed if desiredVelocity is m
             driveMotor.set(desiredVelocity / Constants.maxVelocity);
         }
+    }
+
+    public SwerveModulePosition getModulePosition() {
+        return new SwerveModulePosition(
+                (Robot.isSimulation()) ? simDistance : 0,
+                currentAngle
+        );
     }
 
     /**
