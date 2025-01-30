@@ -15,6 +15,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -23,27 +24,30 @@ public class SwerveModule extends SubsystemBase {
     private final double steerOffset = 0.0;
     // TODO: tune pid controllers
     private final PIDController drivePidController =
-            new PIDController(0, 0, 0);
+            new PIDController(1, 0, 0);
 
     private final ProfiledPIDController drivePpidController =
-            new ProfiledPIDController(0, 0, 0, new Constraints(0.0, 0.0));
+            new ProfiledPIDController(1, 0, 0, new Constraints(0.0, 0.0));
 
-    private final PIDController steerPidController = new PIDController(0, 0, 0);
+    private final PIDController steerPidController = new PIDController(1, 0, 0);
 
     private final ProfiledPIDController steerPpidController =
-            new ProfiledPIDController(0, 0, 0, new Constraints(0.0, 0.0));
+            new ProfiledPIDController(1, 0, 0, new Constraints(0.0, 0.0));
 
     private final SimpleMotorFeedforward steerFeedforwardController =
-            new SimpleMotorFeedforward(0.0, 0.0, 0.0);
+            new SimpleMotorFeedforward(1.0, 0.0, 0.0);
 
     /* Default to open loop. Closed loop is used for PID control over the driving rather than just the steering. */
     private boolean closedLoop = false;
 
     private double desiredVelocity = 0.0; // m/s
+    private double currentVelocity = 0.0;
 
     private Rotation2d currentAngle = new Rotation2d();
     private Rotation2d desiredAngle = new Rotation2d();
     private double simDistance = 0.0;
+
+    private final String moduleName;
 
     private final TalonFX driveMotor;
     private final SparkMax steerMotor;
@@ -56,6 +60,8 @@ public class SwerveModule extends SubsystemBase {
         this.driveMotor = new TalonFX(driveMotorID);
         this.steerMotor = new SparkMax(steerMotorID, MotorType.kBrushless);
         this.canCoder = new CANcoder(encoderID);
+
+        this.moduleName = moduleName;
 
         // Configure motors
         SparkMaxConfig steerConfig = new SparkMaxConfig();
@@ -71,10 +77,16 @@ public class SwerveModule extends SubsystemBase {
     }
 
     public void setState(SwerveModuleState state) {
-        SwerveModuleState desiredState = new SwerveModuleState();
-        desiredState.optimize(currentAngle);
-        steerTo(desiredState.angle); // same as desiredAngle = desiredState.angle
-        this.desiredVelocity = desiredState.speedMetersPerSecond;
+        // SwerveModuleState desiredState = new SwerveModuleState(currentVelocity, currentAngle);
+        // desiredState.optimize(currentAngle);
+        state.optimize(currentAngle);
+        desiredAngle = state.angle;
+        desiredVelocity = state.speedMetersPerSecond;
+
+        // SwerveModuleState desiredState = new SwerveModuleState(state.speedMetersPerSecond, currentAngle);
+        // desiredAngle = desiredState.angle;
+
+        // this.desiredVelocity = desiredState.speedMetersPerSecond;
 
         if (closedLoop) {
             drivePidController.setSetpoint(desiredVelocity);
@@ -87,18 +99,16 @@ public class SwerveModule extends SubsystemBase {
 
     public SwerveModulePosition getModulePosition() {
         return new SwerveModulePosition(
-                (Robot.isSimulation()) ? simDistance : 0,
-                currentAngle
+            (Robot.isSimulation()) ? simDistance : canCoder.getPosition().getValueAsDouble(),
+            currentAngle
         );
     }
 
-    /**
-     * Desired angle modifier
-     *
-     * @param desiredAngle new desired angle
-     */
-    public void steerTo(Rotation2d desiredAngle) {
-        this.desiredAngle = desiredAngle;
+    public SwerveModuleState getModuleState() {
+        return new SwerveModuleState(
+            currentVelocity,
+            currentAngle
+        );
     }
 
     /**
@@ -109,6 +119,10 @@ public class SwerveModule extends SubsystemBase {
         this.closedLoop = closedLoop;
     }
 
+    public double rotationsToRadians(double rotations) {
+        return Rotation2d.fromRotations(rotations).getRadians();
+    }
+
     @Override
     public void periodic() {
         if (Robot.isSimulation()) {
@@ -116,6 +130,9 @@ public class SwerveModule extends SubsystemBase {
         } else {
             currentAngle = new Rotation2d(canCoder.getAbsolutePosition().getValueAsDouble() + steerOffset);
         }
+
+        SmartDashboard.putNumber("[" + moduleName + "] Current Angle", currentAngle.getDegrees());
+        SmartDashboard.putNumber("[" + moduleName + "] Desired Angle", desiredAngle.getDegrees());
 
         steerPidController.setSetpoint(desiredAngle.getRadians());
         steerPpidController.setGoal(desiredAngle.getRadians());
@@ -132,16 +149,26 @@ public class SwerveModule extends SubsystemBase {
                 ) / RobotController.getBatteryVoltage()
         );
 
-        if (closedLoop) {
-            /** TODO: Set the output of the drive motor
-                pidfOutput = 
-                    PID controller(drive motor pid controller setpoint)
-                    + feed forward controller(pid controller setpoint) / battery voltage
-                driveMotor.set(pidfOutput) this will set the percent output of the motor
-                reference: <a href=https://github.dev/Mechanisms-Robotics/2024Robot/blob/main/src/main/java/com/mechlib/swerve/SwerveModule.java>2024Robot</a>
-                           <a href=https://github.dev/FRC-4509-MechBulls/2024_Crescendo_Bot> Mechbulls 2024 Robot </a>
-            */
+        /** 
+         * Update current velocity and 
+         */
+        if (Robot.isSimulation()) {
+            currentVelocity = drivePidController.getSetpoint();
+            simDistance += drivePidController.getSetpoint() * Robot.kDefaultPeriod;
+        } else {
+            if (canCoder == null) {
+                currentVelocity = rotationsToRadians(driveMotor.getVelocity().getValueAsDouble());
+            } else {
+                currentVelocity = rotationsToRadians(canCoder.getVelocity().getValueAsDouble());
+            }
         }
+        if (closedLoop) {
+            drivePidController.setSetpoint(currentVelocity);
+        }
+
+        SmartDashboard.putNumber("[" + moduleName + "] Current Velocity", currentVelocity);
+        SmartDashboard.putNumber("[" + moduleName + "] Desired Velocity", desiredVelocity);
+        SmartDashboard.putNumber("[" + moduleName + "] Velocity Error", Math.abs(desiredVelocity - currentVelocity));
 
         // TODO: Smartdashboard outputs
     }

@@ -2,6 +2,7 @@ package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -39,7 +40,9 @@ public class Swerve extends SubsystemBase {
         flModuleLocation, frModuleLocation, blModuleLocation, brModuleLocation
     );
 
-    private final Field2d field2d = new Field2d();
+    private final PIDController stabilizeController;
+
+    private final Field2d field = new Field2d();
 
      // all these values are subject to change
      private final SwerveModule flModule = new SwerveModule("FL Module",
@@ -71,8 +74,11 @@ public class Swerve extends SubsystemBase {
             new Pose2d()
      );
 
-     public Swerve() {
-        SmartDashboard.putData(field2d);
+    public Swerve() {
+        SmartDashboard.putData(field);
+
+        stabilizeController = new PIDController(0, 0, 0);
+        stabilizeController.setTolerance(0.1); // ???
     }
 
      public void zeroGyro() {
@@ -94,6 +100,10 @@ public class Swerve extends SubsystemBase {
            some swerve orientations that force some motors to dominate */
         SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.maxVelocity);
         setModuleStates(states);
+
+        if (Robot.isSimulation()) {
+            simHeading = simHeading.rotateBy(new Rotation2d(omega * Robot.kDefaultPeriod));
+        }
     }
 
      /**
@@ -160,38 +170,44 @@ public class Swerve extends SubsystemBase {
     }
 
     public void drawModules() {
-        field2d.getObject("FL Module").setPose(
+        field.getObject("FL Module").setPose(
             new Pose2d(
                 getEstimatedPose().getTranslation().plus(flModuleLocation.rotateBy(getHeading())),
                 flModule.getModulePosition().angle.rotateBy(getHeading())
             )
         );
 
-        field2d.getObject("FR Module").setPose(
-                new Pose2d(
-                        getEstimatedPose().getTranslation().plus(frModuleLocation.rotateBy(getHeading())),
-                        flModule.getModulePosition().angle.rotateBy(getHeading())
-                )
+        field.getObject("FR Module").setPose(
+            new Pose2d(
+                getEstimatedPose().getTranslation().plus(frModuleLocation.rotateBy(getHeading())),
+                flModule.getModulePosition().angle.rotateBy(getHeading())
+            )
         );
 
-        field2d.getObject("BL Module").setPose(
-                new Pose2d(
-                        getEstimatedPose().getTranslation().plus(blModuleLocation.rotateBy(getHeading())),
-                        flModule.getModulePosition().angle.rotateBy(getHeading())
-                )
+        field.getObject("BL Module").setPose(
+            new Pose2d(
+                getEstimatedPose().getTranslation().plus(blModuleLocation.rotateBy(getHeading())),
+                flModule.getModulePosition().angle.rotateBy(getHeading())
+            )
         );
 
-        field2d.getObject("BR Module").setPose(
-                new Pose2d(
-                        getEstimatedPose().getTranslation().plus(brModuleLocation.rotateBy(getHeading())),
-                        flModule.getModulePosition().angle.rotateBy(getHeading())
-                )
+        field.getObject("BR Module").setPose(
+            new Pose2d(
+                getEstimatedPose().getTranslation().plus(brModuleLocation.rotateBy(getHeading())),
+                flModule.getModulePosition().angle.rotateBy(getHeading())
+            )
         );
     }
 
     @Override
     public void periodic() {
-        field2d.setRobotPose(new Pose2d());
+        poseEstimator.update(getHeading(), getModulePositions());
+
+        SmartDashboard.putNumber("[Swerve] x", getEstimatedPose().getX());
+        SmartDashboard.putNumber("[Swerve] y", getEstimatedPose().getY());
+        SmartDashboard.putNumber("[Swerve] Heading", getHeading().getDegrees());
+
+        field.setRobotPose(getEstimatedPose());
         drawModules();
     }
 }

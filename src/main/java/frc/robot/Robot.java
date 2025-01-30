@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import frc.robot.subsystems.swerve.Swerve;
@@ -26,7 +27,7 @@ public class Robot extends TimedRobot {
   Swerve swerve = new Swerve();
   Test test = new Test();
 
-   CommandPS4Controller ps4Controller = new CommandPS4Controller(0);
+  CommandPS4Controller ps4Controller = new CommandPS4Controller(0);
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -37,6 +38,9 @@ public class Robot extends TimedRobot {
      m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
      m_chooser.addOption("My Auto", kCustomAuto);
      SmartDashboard.putData("Auto choices", m_chooser);
+
+     if (Robot.isSimulation())
+      swerve.setClosedLoop();
 
      swerve.setDefaultCommand(
             // TODO these arguments are wrong, figure it out
@@ -56,7 +60,9 @@ public class Robot extends TimedRobot {
    * SmartDashboard integrated updating.
    */
   @Override
-  public void robotPeriodic() {}
+  public void robotPeriodic() {
+    CommandScheduler.getInstance().run();
+  }
 
   /**
    * This autonomous (along with the chooser code above) shows how to select between different
@@ -94,7 +100,7 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
     /* When is teleop, run the swerve in open loop because we don't closed loop for driving */
     if (!Robot.isSimulation()) {
-//      swerve.setClosedLoop();
+      swerve.setOpenLoop();
     }
   }
 
