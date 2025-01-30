@@ -39,17 +39,26 @@ public class Robot extends TimedRobot {
      m_chooser.addOption("My Auto", kCustomAuto);
      SmartDashboard.putData("Auto choices", m_chooser);
 
-     if (Robot.isSimulation())
-      swerve.setClosedLoop();
+     if (Robot.isSimulation()) {
+        swerve.setClosedLoop();
+        swerve.setDefaultCommand(
+           new RunCommand(() -> swerve.teleopDrive(
+              ()->ps4Controller.getLeftX(),
+              ()->-ps4Controller.getLeftY(),
+              ()->ps4Controller.getRightX()
+          ), swerve)
+       );
+      } else {
+        swerve.setDefaultCommand(
+           // TODO these arguments are wrong, figure it out
+            new RunCommand(() -> swerve.teleopDrive(
+               ()->ps4Controller.getLeftX(),
+               ()->ps4Controller.getLeftY(),
+               ()->ps4Controller.getRightX()
+           ), swerve)
+        );
+      }
 
-     swerve.setDefaultCommand(
-            // TODO these arguments are wrong, figure it out
-             new RunCommand(() -> swerve.teleopDrive(
-                     ps4Controller::getLeftX,
-                     ps4Controller::getLeftY,
-                     ps4Controller::getRightX
-             ), swerve)
-     );
   }
 
   /**
