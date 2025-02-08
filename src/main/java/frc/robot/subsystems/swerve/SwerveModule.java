@@ -77,16 +77,10 @@ public class SwerveModule extends SubsystemBase {
     }
 
     public void setState(SwerveModuleState state) {
-        // SwerveModuleState desiredState = new SwerveModuleState(currentVelocity, currentAngle);
-        // desiredState.optimize(currentAngle);
         state.optimize(currentAngle);
         desiredAngle = state.angle;
         desiredVelocity = state.speedMetersPerSecond;
 
-        // SwerveModuleState desiredState = new SwerveModuleState(state.speedMetersPerSecond, currentAngle);
-        // desiredAngle = desiredState.angle;
-
-        // this.desiredVelocity = desiredState.speedMetersPerSecond;
 
         if (closedLoop) {
             drivePidController.setSetpoint(desiredVelocity);

@@ -4,9 +4,13 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
@@ -19,10 +23,7 @@ import frc.robot.subsystems.swerve.Swerve;
  * project.
  */
 public class Robot extends TimedRobot {
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
-  private String m_autoSelected;
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
+  private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
   Swerve swerve = new Swerve();
   Test test = new Test();
@@ -35,9 +36,9 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-     m_chooser.addOption("My Auto", kCustomAuto);
-     SmartDashboard.putData("Auto choices", m_chooser);
+     autoChooser.setDefaultOption("Leave", new PathPlannerAuto("Leave"));
+    //  autoChooser.addOption("My Auto", kCustomAuto);
+     SmartDashboard.putData("Auto choices", autoChooser);
 
      if (Robot.isSimulation()) {
         swerve.setClosedLoop();
@@ -47,18 +48,17 @@ public class Robot extends TimedRobot {
               ()->-ps4Controller.getLeftY(),
               ()->ps4Controller.getRightX()
           ), swerve)
-       );
+        );
       } else {
         swerve.setDefaultCommand(
            // TODO these arguments are wrong, figure it out
             new RunCommand(() -> swerve.teleopDrive(
-               ()->ps4Controller.getLeftX(),
-               ()->ps4Controller.getLeftY(),
-               ()->ps4Controller.getRightX()
+               ()->-ps4Controller.getLeftX(),
+               ()->-ps4Controller.getLeftY(),
+               ()->-ps4Controller.getRightX()
            ), swerve)
         );
       }
-
   }
 
   /**
@@ -70,6 +70,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
+    // Command don't run without this
     CommandScheduler.getInstance().run();
   }
 
@@ -85,29 +86,20 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-    System.out.println("Auto selected: " + m_autoSelected);
+    if (autoChooser.getSelected() != null) {
+      autoChooser.getSelected().schedule();
+      swerve.setClosedLoop();
+    }
   }
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
-    }
-  }
+  public void autonomousPeriodic() {}
 
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
-    /* When is teleop, run the swerve in open loop because we don't closed loop for driving */
+    /* When is teleop, run the swerve in open loop because we don't do closed loop for driving */
     if (!Robot.isSimulation()) {
       swerve.setOpenLoop();
     }
