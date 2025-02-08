@@ -121,6 +121,12 @@ public class Swerve extends SubsystemBase {
       */
     public void drive(double vx, double vy, double omega) {
         // TODO add deadband
+        omega = 0.1;
+
+        SmartDashboard.putNumber("vx", vx);
+        SmartDashboard.putNumber("vy", vy);
+        SmartDashboard.putNumber("omega", omega);
+
         // Computes math needed to get the motor outputs for each swerve module from the desired velocity and direction
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(vx, vy, omega));
         /* Desaturates wheel speeds, stops motors from going faster than they are able to which can happen in certain
@@ -128,27 +134,27 @@ public class Swerve extends SubsystemBase {
         SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.maxVelocity);
         setModuleStates(states);
 
-        if (Robot.isSimulation()) {
-            simHeading = simHeading.rotateBy(new Rotation2d(omega * Robot.kDefaultPeriod));
-        }
+        //if (Robot.isSimulation()) {
+            //simHeading = simHeading.rotateBy(new Rotation2d(omega * Robot.kDefaultPeriod));
+        //}
     }
 
     public void autoDrive(ChassisSpeeds speeds) {
-        if (Robot.isSimulation()) {
-            speeds.vxMetersPerSecond /= 2.0;
-            speeds.vyMetersPerSecond /= 2.0;
-        }
+        // if (Robot.isSimulation()) {
+        //     speeds.vxMetersPerSecond /= 2.0;
+        //     speeds.vyMetersPerSecond /= 2.0;
+        // }
 
-        SwerveModuleState[] desiredStates = kinematics.toSwerveModuleStates(speeds);
-        SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.maxVelocity);
+        // SwerveModuleState[] desiredStates = kinematics.toSwerveModuleStates(speeds);
+        // SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.maxVelocity);
 
-        setModuleStates(desiredStates);
+        // setModuleStates(desiredStates);
 
-        if (Robot.isSimulation()) {
-            simHeading = simHeading.rotateBy(new Rotation2d(
-                speeds.omegaRadiansPerSecond * Robot.kDefaultPeriod
-            ));
-        }
+        // if (Robot.isSimulation()) {
+        //     simHeading = simHeading.rotateBy(new Rotation2d(
+        //         speeds.omegaRadiansPerSecond * Robot.kDefaultPeriod
+        //     ));
+        // }
     }
 
      /**
@@ -167,6 +173,15 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setModuleStates(SwerveModuleState[] states) {
+        SmartDashboard.putNumber("fl angle", states[0].angle.getDegrees());
+        SmartDashboard.putNumber("fl speed", states[0].speedMetersPerSecond);
+        SmartDashboard.putNumber("fr angle", states[1].angle.getDegrees());
+        SmartDashboard.putNumber("fr speed", states[1].speedMetersPerSecond);
+        SmartDashboard.putNumber("bl angle", states[2].angle.getDegrees());
+        SmartDashboard.putNumber("bl speed", states[2].speedMetersPerSecond);
+        SmartDashboard.putNumber("br angle", states[3].angle.getDegrees());
+        SmartDashboard.putNumber("br speed", states[3].speedMetersPerSecond);
+
         flModule.setState(states[0]);
         frModule.setState(states[1]);
         blModule.setState(states[2]);
@@ -184,14 +199,14 @@ public class Swerve extends SubsystemBase {
 
     public void resetPose(Pose2d pose) {
         poseEstimator.resetPosition(getHeading(), getModulePositions(), pose);
-        if (Robot.isSimulation()) {
-            simHeading = pose.getRotation();
-        }
+        // if (Robot.isSimulation()) {
+        //     simHeading = pose.getRotation();
+        // }
     }
 
     public Rotation2d getHeading() {
-        if (Robot.isSimulation())
-            return simHeading;
+        // if (Robot.isSimulation())
+        //     return simHeading;
         return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble()).rotateBy(new Rotation2d());
     }
 
