@@ -14,7 +14,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.swerve.Swerve;
 
 /**
@@ -62,6 +64,9 @@ public class Robot extends TimedRobot {
            ), swerve)
         );
       }
+
+      // Empty shifter command for l1
+      new Trigger(() -> shifter.getRawButton(0)).onTrue(new RunCommand(() -> {}));
   }
 
   /**
@@ -110,17 +115,7 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {
-    if (shifter.getRawButton(1)) {
-      // L1 position on elevator
-    } else if (shifter.getRawButton(2)) {
-      // L2 position on elevator
-    } else if (shifter.getRawButton(3)) {
-      // L3 position on elevator
-    } else if (shifter.getRawButton(4)) {
-      // L4 position on elevator
-    }
-  }
+  public void teleopPeriodic() {}
 
   /** This function is called once when the robot is disabled. */
   @Override
