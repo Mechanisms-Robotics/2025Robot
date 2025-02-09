@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
@@ -66,7 +67,7 @@ public class Robot extends TimedRobot {
       }
 
       // Empty shifter command for l1
-      new Trigger(() -> shifter.getRawButton(0)).onTrue(Commands.none()));
+      new Trigger(() -> shifter.getRawButton(0)).onTrue(Commands.none());
   }
 
   /**
