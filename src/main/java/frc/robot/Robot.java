@@ -66,7 +66,7 @@ public class Robot extends TimedRobot {
       }
 
       // Empty shifter command for l1
-      new Trigger(() -> shifter.getRawButton(0)).onTrue(new RunCommand(() -> {}));
+      new Trigger(() -> shifter.getRawButton(0)).onTrue(Commands.none()));
   }
 
   /**
