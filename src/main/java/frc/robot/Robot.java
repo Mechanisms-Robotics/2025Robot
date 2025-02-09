@@ -7,6 +7,7 @@ package frc.robot;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,6 +30,7 @@ public class Robot extends TimedRobot {
   Test test = new Test();
 
   CommandPS4Controller ps4Controller = new CommandPS4Controller(0);
+  Joystick shifter = new Joystick(1);
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -108,7 +110,17 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    if (shifter.getRawButton(1)) {
+      // L1 position on elevator
+    } else if (shifter.getRawButton(2)) {
+      // L2 position on elevator
+    } else if (shifter.getRawButton(3)) {
+      // L3 position on elevator
+    } else if (shifter.getRawButton(4)) {
+      // L4 position on elevator
+    }
+  }
 
   /** This function is called once when the robot is disabled. */
   @Override
