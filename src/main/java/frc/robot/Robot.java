@@ -67,9 +67,12 @@ public class Robot extends TimedRobot {
            ), swerve)
         );
       }
-
-      new Trigger(() -> shifter.getRawButton(0)).onTrue(new PrintCommand("shifted"));
-  }
+      new Trigger(() -> shifter.getRawButtonPressed(8)).whileTrue(new RunCommand(() -> elevator.setLevel(0)));
+      new Trigger(() -> shifter.getRawButtonPressed(1)).whileTrue(new RunCommand(() -> elevator.setLevel(1)));
+      new Trigger(() -> shifter.getRawButtonPressed(2)).whileTrue(new RunCommand(() -> elevator.setLevel(2)));
+      new Trigger(() -> shifter.getRawButtonPressed(3)).whileTrue(new RunCommand(() -> elevator.setLevel(3)));
+      new Trigger(() -> shifter.getRawButtonPressed(4)).whileTrue(new RunCommand(() -> elevator.setLevel(4)));
+    }
 
   /**
    * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics

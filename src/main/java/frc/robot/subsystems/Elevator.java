@@ -38,11 +38,10 @@ public class Elevator extends SubsystemBase {
     private final Alert badLevelArguent = new Alert("Level argument invalid, must be 0-4", Alert.AlertType.kError);
 
     public void setLevel(int num) {
-        System.out.println("bing bong");
-        badLevelArguent.set(true);
+        badLevelArguent.set(num > 4 || num < 0);
         switch (num) {
             case 0:
-                controller.setSetpoint(0);
+                controller.setSetpoint(offsetTicks);
                 state = State.GROUND;
                 break;
             case 1:
