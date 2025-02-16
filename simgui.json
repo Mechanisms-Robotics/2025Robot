@@ -4,10 +4,26 @@
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Alerts": "Alerts",
       "/SmartDashboard/Auto choices": "String Chooser",
+      "/SmartDashboard/Elevator Sim": "Mechanism2d",
       "/SmartDashboard/Field": "Field2d"
     },
     "windows": {
       "/FMSInfo": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Alerts": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Auto choices": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Elevator Sim": {
         "window": {
           "visible": true
         }
@@ -25,7 +41,26 @@
       }
     }
   },
+  "NetworkTables": {
+    "transitory": {
+      "SmartDashboard": {
+        "Elevator Sim": {
+          "Elevator Root": {
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
+      }
+    }
+  },
   "NetworkTables Info": {
+    "Clients": {
+      "open": true
+    },
+    "Server": {
+      "open": true
+    },
     "visible": true
   }
 }
