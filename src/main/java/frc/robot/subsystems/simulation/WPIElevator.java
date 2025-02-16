@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems.simulation;
 
-import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.ExponentialProfile;
@@ -21,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.util.ElevatorFeedforward;
 
 public class WPIElevator implements AutoCloseable {
   private double p = 0;
@@ -90,8 +90,8 @@ public class WPIElevator implements AutoCloseable {
 
   /** Advance the simulation. */
   public void simulationPeriodic() {
-    SmartDashboard.putNumber("Position", m_elevatorSim.getPositionMeters());
-    SmartDashboard.putNumber("Setpoint", m_pidController.getSetpoint());
+    SmartDashboard.putNumber("Position", Units.metersToInches(m_elevatorSim.getPositionMeters()));
+    SmartDashboard.putNumber("Setpoint", Units.metersToInches(m_pidController.getSetpoint()));
     p = SmartDashboard.getNumber("P", p);
     i = SmartDashboard.getNumber("I", i);
     d = SmartDashboard.getNumber("D", d);
