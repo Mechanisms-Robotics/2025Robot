@@ -6,6 +6,7 @@ package frc.robot;
 
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -13,12 +14,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.simulation.WPIElevator;
 import frc.robot.subsystems.swerve.Swerve;
 
 /**
@@ -32,6 +32,8 @@ public class Robot extends TimedRobot {
 
   Swerve swerve = new Swerve();
   Elevator elevator = new Elevator();
+  WPIElevator wpiElevator = new WPIElevator();
+  
   Test test = new Test();
 
   CommandPS4Controller ps4Controller = new CommandPS4Controller(0);
@@ -49,6 +51,7 @@ public class Robot extends TimedRobot {
 
      if (Robot.isSimulation()) {
         swerve.setClosedLoop();
+        
         swerve.setDefaultCommand(
            new RunCommand(() -> swerve.teleopDrive(
               ()->ps4Controller.getLeftX(),
@@ -68,8 +71,8 @@ public class Robot extends TimedRobot {
         );
       }
       new Trigger(() -> shifter.getRawButtonPressed(8)).whileTrue(new RunCommand(() -> elevator.setLevel(0)));
-      new Trigger(() -> shifter.getRawButtonPressed(1)).whileTrue(new RunCommand(() -> elevator.setLevel(1)));
-      new Trigger(() -> shifter.getRawButtonPressed(2)).whileTrue(new RunCommand(() -> elevator.setLevel(2)));
+      new Trigger(() -> shifter.getRawButtonPressed(1)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(5))));
+      new Trigger(() -> shifter.getRawButtonPressed(2)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(60))));
       new Trigger(() -> shifter.getRawButtonPressed(3)).whileTrue(new RunCommand(() -> elevator.setLevel(3)));
       new Trigger(() -> shifter.getRawButtonPressed(4)).whileTrue(new RunCommand(() -> elevator.setLevel(4)));
     }
@@ -83,6 +86,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
+    wpiElevator.updateTelemetry();
     // Command don't run without this
     CommandScheduler.getInstance().run();
   }
@@ -112,6 +116,7 @@ public class Robot extends TimedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+    wpiElevator.reset();
     /* When is teleop, run the swerve in open loop because we don't do closed loop for driving */
     if (!Robot.isSimulation()) {
       swerve.setOpenLoop();
@@ -128,7 +133,9 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically when disabled. */
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    wpiElevator.stop();
+  }
 
   /** This function is called once when test mode is enabled. */
   @Override
@@ -145,5 +152,7 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically whilst in simulation. */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    wpiElevator.simulationPeriodic();
+  }
 }
