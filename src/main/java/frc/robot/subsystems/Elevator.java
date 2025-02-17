@@ -1,122 +1,128 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkSim;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 
-import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.BatterySim;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj.simulation.EncoderSim;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.math.util.Units;
 
 public class Elevator extends SubsystemBase {
-    SparkMax motor = new SparkMax(9, SparkMax.MotorType.kBrushless);
-    Encoder encoder = new Encoder(10, 11);
-    PIDController controller = new PIDController(0.01, 0.0, 0.0);
-    ElevatorFeedforward feedforward = new ElevatorFeedforward(0.0, 0.5, 0.0, 0.0);
+    // TODO: Set soft limits
+    // TODO: Limit switches (see getForwardLimitSwitch)
 
-    DCMotor gearbox = DCMotor.getKrakenX60(1);
-    double gearing = 10.0;
-    ElevatorSim elevatorSim = new ElevatorSim(gearbox, gearing, 1, Units.inchesToMeters(2), Units.inchesToMeters(36), Units.inchesToMeters(92), true, 0.0);
-    SparkSim motorSim = new SparkSim(motor, gearbox);
-    EncoderSim encoderSim = new EncoderSim(encoder);
+    // Motor controllers: one leader and one follower
+    private final SparkMax leader;
+    private final SparkMax follower;
 
-      // Create a Mechanism2d visualization of the elevator
-  private final Mechanism2d mech2d = new Mechanism2d(20, 50);
-  private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Elevator Root", 10, 10);
-  private final MechanismLigament2d elevatorMech2d =
-      mech2dRoot.append(
-          new MechanismLigament2d("Elevator", elevatorSim.getPositionMeters(), 90));
+    // The throughbore encoder is on the leader
+    private final RelativeEncoder encoder;
 
-    enum State {
-        GROUND,
-        L1,
-        L2,
-        L3,
-        L4
+    // Feedback (PID) and feedforward controllers
+    private final PIDController pidController;
+    private final SimpleMotorFeedforward feedforward;
+
+    // Target elevator positionv
+    private double targetPosition = 0.0;
+
+    // --- Tuning Constants ---
+    // PID gains (tune these to your mechanism)
+    private static final double kP = 0.1;
+    private static final double kI = 0.0;
+    private static final double kD = 0.0;
+
+    // Feedforward constants
+    // kS (static), kV (velocity), and kA (acceleration) terms.
+    // For an elevator, you typically add a gravity term (kG) for compensation.
+    private static final double kS = 0.0;
+    private static final double kV = 0.0;
+    private static final double kA = 0.0;
+    // Gravity compensation term – adjust this to counteract the weight of the elevator
+    private static final double kG = 0.5;
+
+    // Conversion factor for the encoder (e.g., rotations to inches)
+    //private static final double POSITION_CONVERSION_FACTOR = 1.0;
+
+    /**
+     * Constructs the Elevator subsystem.
+     * 
+     * @param leaderID   CAN ID for the leader motor controller.
+     * @param followerID CAN ID for the follower motor controller.
+     */
+    public Elevator(int leaderID, int followerID) {
+        // Initialize motor controllers (assumed to be brushless for NEO motors)
+        leader = new SparkMax(leaderID, MotorType.kBrushless);
+        follower = new SparkMax(followerID, MotorType.kBrushless);
+
+        // Configure the motors
+        SparkMaxConfig leaderConfig = new SparkMaxConfig();
+        SparkMaxConfig followerConfig = new SparkMaxConfig();
+
+        followerConfig.follow(leader, true /* inverted */);
+
+        leader.configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        follower.configure(followerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        // Get the encoder from the leader (the throughbore encoder on the output shaft)
+        encoder = leader.getAlternateEncoder();
+        //encoder.setPositionConversionFactor(POSITION_CONVERSION_FACTOR);
+
+        // Initialize the PID controller for feedback control
+        pidController = new PIDController(kP, kI, kD);
+        pidController.setTolerance(0.1); // Adjust tolerance as needed
+
+        // Initialize the feedforward controller.
+        // For a stationary elevator hold, we assume target velocity = 0.
+        feedforward = new SimpleMotorFeedforward(kS, kV, kA);
     }
 
-
-    State state = State.GROUND;
-
-    // TODO: figure these values out
-    // max ticks is used to convert inches to ticks, the relationship between maxTicks and max Height is linear
-    private final double maxTicks = 100;
-    private final double offsetTicks = 0;
-    private final double maxHeight = 92; // inches
-    private final double l1Ticks = inchesToTicks(10);
-    private final double l2Ticks = inchesToTicks(20);
-    private final double l3Ticks = inchesToTicks(30); 
-    private final double l4Ticks = inchesToTicks(40);
-
-    private final Alert badLevelArguent = new Alert("Level argument invalid, must be 0-4", Alert.AlertType.kError);
-
-    public Elevator() {
-        // SmartDashboard.putData("Elevator Sim", mech2d);
+    /**
+     * Sets the desired elevator position.
+     *
+     * @param position The target position (in the same units as the conversion factor).
+     */
+    public void setTargetPosition(double position) {
+        targetPosition = position;
     }
 
-    public void setLevel(int num) {
-        badLevelArguent.set(num > 4 || num < 0);
-        switch (num) {
-            case 0:
-                controller.setSetpoint(offsetTicks);
-                state = State.GROUND;
-                break;
-            case 1:
-                controller.setSetpoint(l1Ticks);
-                state = State.L1;
-                break;
-            case 2:
-                controller.setSetpoint(l2Ticks);
-                state = State.L2;
-                break;
-            case 3:
-                controller.setSetpoint(l3Ticks);
-                state = State.L3;
-                break;
-            case 4:
-                controller.setSetpoint(l4Ticks);
-                state = State.L4;
-                break;
-
-        }
+    /**
+     * Returns the current elevator position.
+     *
+     * @return The current position (in the same units as conversion factor).
+     */
+    public double getCurrentPosition() {
+        return encoder.getPosition();
     }
-
-    private double inchesToTicks(double inches) {
-        return maxTicks / maxHeight * inches - offsetTicks;
-    }
-
 
     @Override
     public void periodic() {
-        // double output = feedforward.calculate(encoder.get   .getValueAsDouble());
-        // motor.set(output);
+        // Get the current position from the encoder
+        double currentPosition = getCurrentPosition();
 
-        elevatorMech2d.setLength(encoder.getDistance());
+        // Calculate the feedback output from the PID controller.
+        double feedbackOutput = pidController.calculate(currentPosition, targetPosition);
 
-        SmartDashboard.putNumber("Elevator State", state.ordinal());
-    }
-    @Override
-    public void simulationPeriodic() {
-        elevatorSim.setInput(motorSim.getVelocity() * RobotController.getBatteryVoltage());
-        elevatorSim.update(0.02);
+        // Calculate feedforward. For a stationary target (holding position),
+        // we assume zero target velocity.
+        double ffOutput = feedforward.calculate(0.0) + kG;
 
-        encoderSim.setDistance(elevatorSim.getPositionMeters());
-        
+        // Combine feedback and feedforward.
+        double motorOutput = feedbackOutput + ffOutput;
 
-        RoboRioSim.setVInVoltage(
-            BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps())
-        );
+        // Clamp the motor output to the valid range [-1, 1]
+        motorOutput = Math.max(-1.0, Math.min(1.0, motorOutput));
+
+        // Command the motor
+        leader.set(motorOutput);
+
+        // (Optional) Output diagnostic info
+        System.out.println("Elevator -> Target: " + targetPosition 
+            + ", Position: " + currentPosition 
+            + ", Motor Output: " + motorOutput);
     }
 }
