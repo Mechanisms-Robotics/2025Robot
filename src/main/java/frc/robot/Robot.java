@@ -70,11 +70,11 @@ public class Robot extends TimedRobot {
            ), swerve)
         );
       }
-      new Trigger(() -> shifter.getRawButtonPressed(8)).whileTrue(new RunCommand(() -> elevator.setLevel(0)));
+      //new Trigger(() -> shifter.getRawButtonPressed(8)).whileTrue(new RunCommand(() -> elevator.setLevel(0)));
       new Trigger(() -> shifter.getRawButtonPressed(1)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(5))));
       new Trigger(() -> shifter.getRawButtonPressed(2)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(60))));
-      new Trigger(() -> shifter.getRawButtonPressed(3)).whileTrue(new RunCommand(() -> elevator.setLevel(3)));
-      new Trigger(() -> shifter.getRawButtonPressed(4)).whileTrue(new RunCommand(() -> elevator.setLevel(4)));
+      //new Trigger(() -> shifter.getRawButtonPressed(3)).whileTrue(new RunCommand(() -> elevator.setLevel(3)));
+      //new Trigger(() -> shifter.getRawButtonPressed(4)).whileTrue(new RunCommand(() -> elevator.setLevel(4)));
     }
 
   /**
