@@ -3,12 +3,15 @@ package frc.robot.subsystems;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkClosedLoopController;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -18,14 +21,14 @@ public class Elevator extends SubsystemBase {
 
     // Elevator positions in encoder tics
     // TODO: Determine experimentally and then put an equation for offline estimation of changes and put that here for posterity
-    private final int RESTING = 0; // TODO make sure powered down completely when resting or very low to avoid power draw
-    private final int PROCESSOR = 0;
-    private final int LOADING = 0;
-    private final int L1 = 0;
-    private final int L2 = 0;
-    private final int L3 = 0;
-    private final int L4 = 0;
-    private final int BARGE = 0;
+    public final int RESTING = 0; // TODO make sure powered down completely when resting or very low to avoid power draw
+    public final int PROCESSOR = 0;
+    public final int LOADING = 0;
+    public final int L1 = 0;
+    public final int L2 = 0;
+    public final int L3 = 0;
+    public final int L4 = 0;
+    public final int BARGE = 0;
 
     // TODO: Set CAN ids
     private final int LEADER_CAN_ID = 0;
@@ -38,27 +41,15 @@ public class Elevator extends SubsystemBase {
     // The throughbore encoder is on the leader
     private final RelativeEncoder m_output_encoder;
 
-    // Feedback (PID) and feedforward controllers
-    private final PIDController m_pidController;
-    private final SimpleMotorFeedforward m_feedforward;
-
-    // Target elevator position
-    private double m_targetPosition = 0.0;
+    // REV's built-in PID controller on the leader
+    private final SparkClosedLoopController m_sparkClosedLoopController;
 
     // PID gains TODO: Tune
     private static final double KP = 0.0;
     private static final double KI = 0.0;
     private static final double KD = 0.0;
-    private static final double ERROR_TOLERANCE = 0.0;
-
-    // Feedforward constants TODO: Tune
-    // KS (static), KV (velocity), and KA (acceleration) terms.
-    // For an elevator, you typically add a gravity term (KG) for compensation.
-    private static final double KS = 0.0;
-    private static final double KV = 0.0;
-    private static final double KA = 0.0;
-    // Gravity compensation term – adjust this to counteract the weight of the elevator
-    private static final double KG = 0.0;
+    private static final double MIN_OUTPUT = 0.0;
+    private static final double MAX_OUTPUT = 0.0;
 
     /**
      * Constructs the Elevator subsystem.
@@ -69,8 +60,19 @@ public class Elevator extends SubsystemBase {
         m_follower = new SparkMax(FOLLOWER_CAN_ID, MotorType.kBrushless);
 
         // Configure the motors
+
+        // TODO Get help / rework the control loop for good control and smoothness
+        // Ref https://docs.revrobotics.com/revlib/spark/closed-loop/closed-loop-control-getting-started
+        // and see what we can do to tune and improve the control.
+
         SparkMaxConfig leaderConfig = new SparkMaxConfig();
         SparkMaxConfig followerConfig = new SparkMaxConfig();
+
+        leaderConfig.closedLoop
+            .p(KP)
+            .i(KI)
+            .d(KD)
+            .outputRange(MIN_OUTPUT, MAX_OUTPUT);
 
         followerConfig.follow(m_leader, true /* inverted */);
 
@@ -80,13 +82,8 @@ public class Elevator extends SubsystemBase {
         // Get the encoder from the leader (the throughbore encoder on the output shaft)
         m_output_encoder = m_leader.getAlternateEncoder();
 
-        // Initialize the PID controller for feedback control
-        m_pidController = new PIDController(KP, KI, KD);
-        m_pidController.setTolerance(ERROR_TOLERANCE); // Adjust tolerance as needed
-
-        // Initialize the feedforward controller.
-        // For a stationary elevator hold, we assume target velocity = 0.
-        m_feedforward = new SimpleMotorFeedforward(KS, KV, KA);
+        // The onboard controller
+        m_sparkClosedLoopController = m_leader.getClosedLoopController();
     }
 
     /**
@@ -95,7 +92,13 @@ public class Elevator extends SubsystemBase {
      * @param position The target position
      */
     public void setTargetPosition(double position) {
-        m_targetPosition = position;
+        double feed_forward = 0.0; // TODO and may be different going down
+
+        m_sparkClosedLoopController.setReference(
+            position,
+            ControlType.kPosition,
+            ClosedLoopSlot.kSlot0, // TODO
+            feed_forward);
     }
 
     /**
@@ -109,28 +112,5 @@ public class Elevator extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // Get the current position from the encoder
-        double currentPosition = getCurrentPosition();
-
-        // Calculate the feedback output from the PID controller.
-        double feedbackOutput = m_pidController.calculate(currentPosition, m_targetPosition);
-
-        // Calculate feedforward. For a stationary target (holding position),
-        // we assume zero target velocity.
-        double ffOutput = m_feedforward.calculate(0.0) + KG;
-
-        // Combine feedback and feedforward.
-        double motorOutput = feedbackOutput + ffOutput;
-
-        // Clamp the motor output to the valid range [-1, 1]
-        motorOutput = Math.max(-1.0, Math.min(1.0, motorOutput));
-
-        // Command the motor
-        m_leader.set(motorOutput);
-
-        // (Optional) Output diagnostic info
-        System.out.println("Elevator -> Target: " + m_targetPosition 
-            + ", Position: " + currentPosition 
-            + ", Motor Output: " + motorOutput);
     }
 }
