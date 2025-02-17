@@ -16,6 +16,10 @@ public class Elevator extends SubsystemBase {
     // TODO: Set soft limits
     // TODO: Limit switches (see getForwardLimitSwitch)
 
+    // TODO: Set CAN ids
+    private final int leaderID = 0;
+    private final int followerID = 0;
+
     // Motor controllers: one leader and one follower
     private final SparkMax leader;
     private final SparkMax follower;
@@ -54,7 +58,7 @@ public class Elevator extends SubsystemBase {
      * @param leaderID   CAN ID for the leader motor controller.
      * @param followerID CAN ID for the follower motor controller.
      */
-    public Elevator(int leaderID, int followerID) {
+    public Elevator() {
         // Initialize motor controllers (assumed to be brushless for NEO motors)
         leader = new SparkMax(leaderID, MotorType.kBrushless);
         follower = new SparkMax(followerID, MotorType.kBrushless);
