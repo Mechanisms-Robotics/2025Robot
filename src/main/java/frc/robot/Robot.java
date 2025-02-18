@@ -31,7 +31,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
   Swerve swerve = new Swerve();
-  Elevator elevator = new Elevator();
+  // Elevator elevator = new Elevator();
   WPIElevator wpiElevator = new WPIElevator();
   
   Test test = new Test();
@@ -70,11 +70,11 @@ public class Robot extends TimedRobot {
            ), swerve)
         );
       }
-      new Trigger(() -> shifter.getRawButtonPressed(8)).whileTrue(new RunCommand(() -> elevator.setLevel(0)));
-      new Trigger(() -> shifter.getRawButtonPressed(1)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(5))));
-      new Trigger(() -> shifter.getRawButtonPressed(2)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(60))));
-      new Trigger(() -> shifter.getRawButtonPressed(3)).whileTrue(new RunCommand(() -> elevator.setLevel(3)));
-      new Trigger(() -> shifter.getRawButtonPressed(4)).whileTrue(new RunCommand(() -> elevator.setLevel(4)));
+      // new Trigger(() -> shifter.getRawButtonPressed(8)).whileTrue(new RunCommand(() -> elevator.setLevel(0)));
+      new Trigger(() -> shifter.getRawButton(1)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(5))));
+      new Trigger(() -> shifter.getRawButton(2)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(60))));
+      // new Trigger(() -> shifter.getRawButtonPressed(3)).whileTrue(new RunCommand(() -> elevator.setLevel(3)));
+      // new Trigger(() -> shifter.getRawButtonPressed(4)).whileTrue(new RunCommand(() -> elevator.setLevel(4)));
     }
 
   /**
@@ -105,7 +105,7 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     if (autoChooser.getSelected() != null) {
       autoChooser.getSelected().schedule();
-      swerve.setClosedLoop();
+      // swerve.setClosedLoop();
     }
   }
 
@@ -119,7 +119,7 @@ public class Robot extends TimedRobot {
     wpiElevator.reset();
     /* When is teleop, run the swerve in open loop because we don't do closed loop for driving */
     if (!Robot.isSimulation()) {
-      swerve.setOpenLoop();
+      // swerve.setOpenLoop();
     }
   }
 

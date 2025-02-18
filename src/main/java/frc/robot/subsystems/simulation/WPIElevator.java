@@ -41,11 +41,7 @@ public class WPIElevator implements AutoCloseable {
       new PIDController(p, i, d);
 
   ElevatorFeedforward m_feedforward =
-      new ElevatorFeedforward(
-          Constants.kElevatorkS,
-          Constants.kElevatorkG,
-          Constants.kElevatorkV,
-          Constants.kElevatorkA);
+      new ElevatorFeedforward(0, 0, 0, 0);
   private final Encoder m_encoder =
       new Encoder(Constants.kEncoderAChannel, Constants.kEncoderBChannel);
   private final PWMSparkMax m_motor = new PWMSparkMax(Constants.kMotorPort);
@@ -80,6 +76,10 @@ public class WPIElevator implements AutoCloseable {
     SmartDashboard.putNumber("P", p);
     SmartDashboard.putNumber("I", i);
     SmartDashboard.putNumber("D", d);
+    SmartDashboard.putNumber("G", m_feedforward.g);
+    SmartDashboard.putNumber("S", m_feedforward.s);
+    SmartDashboard.putNumber("V", m_feedforward.v);
+    SmartDashboard.putNumber("A", m_feedforward.a);
 
     m_encoder.setDistancePerPulse(Constants.kElevatorEncoderDistPerPulse);
 
@@ -99,6 +99,20 @@ public class WPIElevator implements AutoCloseable {
     m_pidController.setP(p);
     m_pidController.setI(i);
     m_pidController.setD(d);
+
+    m_feedforward.g = SmartDashboard.getNumber("G", m_feedforward.g);
+    m_feedforward.s = SmartDashboard.getNumber("S", m_feedforward.s);
+    m_feedforward.v = SmartDashboard.getNumber("V", m_feedforward.v);
+    m_feedforward.a = SmartDashboard.getNumber("A", m_feedforward.a);
+
+    double pidOutput = m_pidController.calculate(m_encoder.getDistance(), m_setpoint.position);
+    double feedforwardOutput = m_feedforward.s * Math.signum(m_setpoint.velocity) + m_feedforward.g + m_feedforward.v * m_setpoint.velocity;
+    System.out.println(feedforwardOutput + " " + m_feedforward.v);
+    SmartDashboard.putNumber("PID", pidOutput);
+    SmartDashboard.putNumber("Feedforward", feedforwardOutput);
+
+
+    m_motor.setVoltage(pidOutput + feedforwardOutput);
 
     // In this method, we update our simulation of what our elevator is doing
     // First, we set our "inputs" (voltages)
@@ -120,18 +134,9 @@ public class WPIElevator implements AutoCloseable {
    * @param goal the position to maintain
    */
   public void reachGoal(double goal) {
+    System.out.println(Units.metersToInches(goal));
     var goalState = new ExponentialProfile.State(goal, 0);
-
-    var next = m_profile.calculate(0.020, m_setpoint, goalState);
-
-    // With the setpoint value we run PID control like normal
-    double pidOutput = m_pidController.calculate(m_encoder.getDistance(), m_setpoint.position);
-    double feedforwardOutput =
-        m_feedforward.calculateWithVelocities(m_setpoint.velocity, next.velocity);
-
-    m_motor.setVoltage(pidOutput + feedforwardOutput);
-
-    m_setpoint = next;
+    m_setpoint = m_profile.calculate(0.02, m_setpoint, goalState);
   }
 
   /** Stop the control loop and motor output. */

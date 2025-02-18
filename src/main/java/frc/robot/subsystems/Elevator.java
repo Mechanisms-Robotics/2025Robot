@@ -1,11 +1,12 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkSim;
 
-import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.ExponentialProfile;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotController;
@@ -18,26 +19,35 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.ElevatorFeedforward;
 import edu.wpi.first.math.util.Units;
 
 public class Elevator extends SubsystemBase {
-    SparkMax motor = new SparkMax(9, SparkMax.MotorType.kBrushless);
-    Encoder encoder = new Encoder(10, 11);
-    PIDController controller = new PIDController(0.01, 0.0, 0.0);
-    ElevatorFeedforward feedforward = new ElevatorFeedforward(0.0, 0.5, 0.0, 0.0);
+    // hardware
+    private final SparkMax motor = new SparkMax(9, SparkMax.MotorType.kBrushless);
+    private final Encoder encoder = new Encoder(10, 11);
+    private final double maxHeight = 92; // inches
+    private final double drumRadius = Units.inchesToMeters(1);
+    
+    // controllers
+    private final ExponentialProfile profile = new ExponentialProfile(ExponentialProfile.Constraints.fromCharacteristics(10, 5, 0));
+    private final ExponentialProfile.State setpoint = new ExponentialProfile.State(0, 0);
+    private final PIDController controller = new PIDController(0.01, 0.0, 0.0);
+    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0.0, 0.5, 0.0, 0.0);
 
-    DCMotor gearbox = DCMotor.getKrakenX60(1);
-    double gearing = 10.0;
-    ElevatorSim elevatorSim = new ElevatorSim(gearbox, gearing, 1, Units.inchesToMeters(2), Units.inchesToMeters(36), Units.inchesToMeters(92), true, 0.0);
-    SparkSim motorSim = new SparkSim(motor, gearbox);
-    EncoderSim encoderSim = new EncoderSim(encoder);
+    // simulator attributes
+    private final DCMotor gearbox = DCMotor.getNeoVortex(2);
+    private final double gearing = 10.0;
+    private final ElevatorSim elevatorSim = new ElevatorSim(gearbox, gearing, 1, Units.inchesToMeters(2), Units.inchesToMeters(36), Units.inchesToMeters(92), true, 0.0);
+    private final SparkMaxSim motorSim = new SparkMaxSim(motor, gearbox);
+    private final EncoderSim encoderSim = new EncoderSim(encoder);
 
-      // Create a Mechanism2d visualization of the elevator
-  private final Mechanism2d mech2d = new Mechanism2d(20, 50);
-  private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Elevator Root", 10, 10);
-  private final MechanismLigament2d elevatorMech2d =
-      mech2dRoot.append(
-          new MechanismLigament2d("Elevator", elevatorSim.getPositionMeters(), 90));
+    // Create a Mechanism2d visualization of the elevator
+    private final Mechanism2d mech2d = new Mechanism2d(10, 100);
+    private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Elevator Root", 10, 10);
+    private final MechanismLigament2d elevatorMech2d =
+    mech2dRoot.append(
+        new MechanismLigament2d("Elevator", elevatorSim.getPositionMeters(), 90));
 
     enum State {
         GROUND,
@@ -54,7 +64,6 @@ public class Elevator extends SubsystemBase {
     // max ticks is used to convert inches to ticks, the relationship between maxTicks and max Height is linear
     private final double maxTicks = 100;
     private final double offsetTicks = 0;
-    private final double maxHeight = 92; // inches
     private final double l1Ticks = inchesToTicks(10);
     private final double l2Ticks = inchesToTicks(20);
     private final double l3Ticks = inchesToTicks(30); 
@@ -64,6 +73,7 @@ public class Elevator extends SubsystemBase {
 
     public Elevator() {
         // SmartDashboard.putData("Elevator Sim", mech2d);
+        encoder.setDistancePerPulse(2.0 * Math.PI * drumRadius / 4096);
     }
 
     public void setLevel(int num) {
@@ -114,7 +124,6 @@ public class Elevator extends SubsystemBase {
 
         encoderSim.setDistance(elevatorSim.getPositionMeters());
         
-
         RoboRioSim.setVInVoltage(
             BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps())
         );
