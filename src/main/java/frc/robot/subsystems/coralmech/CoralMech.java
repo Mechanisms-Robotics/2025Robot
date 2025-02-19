@@ -23,18 +23,19 @@ public class CoralMech extends SubsystemBase {
     public CoralMech() {
         // motor configuration
         SparkMaxConfig config = new SparkMaxConfig();
+        SmartDashboard.putNumber("CoralMech/ejectVoltage", ejectVoltage);
     }
 
     public void placeCoral() {
         motorL.setVoltage(ejectVoltage);
         motorR.setVoltage(-ejectVoltage);
-        SmartDashboard.putString("Coral Mech/State", "placing");
+        SmartDashboard.putString("CoralMech/State", "placing");
     }
 
     public void intakeCoral() {
         motorL.setVoltage(intakeVoltage);
         motorR.setVoltage(-intakeVoltage);
-        SmartDashboard.putString("Coral Mech/State", "intaking");
+        SmartDashboard.putString("CoralsMech/State", "intaking");
     }
 
     @Override
