@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
+import frc.robot.subsystems.coralmech.CoralMech;
 import frc.robot.subsystems.swerve.Swerve;
 
 /**
@@ -26,6 +27,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
   Swerve swerve = new Swerve();
+  CoralMech coralMech = new CoralMech();
   Test test = new Test();
 
   CommandPS4Controller ps4Controller = new CommandPS4Controller(0);
@@ -60,6 +62,7 @@ public class Robot extends TimedRobot {
            ), swerve)
         );
       }
+      ps4Controller.L1().whileTrue(new RunCommand(coralMech::intakeCoral, coralMech));
   }
 
   /**
