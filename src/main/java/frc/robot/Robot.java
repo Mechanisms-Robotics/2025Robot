@@ -50,8 +50,7 @@ public class Robot extends TimedRobot {
      SmartDashboard.putData("Auto choices", autoChooser);
 
       if (Robot.isSimulation()) {
-        swerve.setClosedLoop();
-        DriverStation.silenceJoystickConnectionWarning(true);
+
       } else {
         // declaring and elevator in sim dies because it cannot handle alternative encoders
         elevator = new Elevator();
@@ -153,6 +152,8 @@ public class Robot extends TimedRobot {
   /** This function is called once when the robot is first started up. */
   @Override
   public void simulationInit() {
+    swerve.setClosedLoop();
+    DriverStation.silenceJoystickConnectionWarning(true);
   }
 
   /** This function is called periodically whilst in simulation. */
