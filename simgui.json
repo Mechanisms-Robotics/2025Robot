@@ -4,8 +4,12 @@
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Alerts": "Alerts",
       "/SmartDashboard/Auto choices": "String Chooser",
-      "/SmartDashboard/Elevator Sim": "Mechanism2d",
-      "/SmartDashboard/Field": "Field2d"
+      "/SmartDashboard/Drive PID Controller": "PIDController",
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Swerve/Stabilize Controller": "PIDController",
+      "/SmartDashboard/SwerveModules/Drive Profiled PID Controller": "ProfiledPIDController",
+      "/SmartDashboard/SwerveModules/Steer Feedforward": "ProfiledPIDController",
+      "/SmartDashboard/SwerveModules/Steer PID Controller": "PIDController"
     },
     "windows": {
       "/FMSInfo": {
@@ -45,11 +49,25 @@
   "NetworkTables": {
     "transitory": {
       "SmartDashboard": {
-        "Elevator Sim": {
-          "Elevator Root": {
+        "CoralMech": {
+          "open": true
+        },
+        "Drive PID Controller": {
+          "open": true
+        },
+        "FR Module": {
+          "open": true
+        },
+        "Swerve": {
+          "open": true
+        },
+        "SwerveModules": {
+          "Drive PID Controller": {
             "open": true
           },
-          "open": true
+          "Drive Profiled PID Controller": {
+            "open": true
+          }
         },
         "open": true
       }
