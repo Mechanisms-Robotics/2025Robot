@@ -5,6 +5,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class CoralMech extends SubsystemBase {
@@ -27,10 +28,16 @@ public class CoralMech extends SubsystemBase {
     public void placeCoral() {
         motorL.setVoltage(ejectVoltage);
         motorR.setVoltage(-ejectVoltage);
+        SmartDashboard.putString("Coral Mech/State", "placing");
     }
 
     public void intakeCoral() {
         motorL.setVoltage(intakeVoltage);
         motorR.setVoltage(-intakeVoltage);
+        SmartDashboard.putString("Coral Mech/State", "intaking");
+    }
+
+    @Override
+    public void periodic() {
     }
 }
