@@ -1,6 +1,8 @@
 package frc.robot.util;
 
 import edu.wpi.first.util.protobuf.ProtobufSerializable;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.struct.StructSerializable;
 
 /** 
@@ -8,11 +10,11 @@ import edu.wpi.first.util.struct.StructSerializable;
  * (edu.wpi.first.math.controller.ElevatorFeedforward)
  * I wanted s g v and a to be public variables because I have mental health issues.
  */
-public class ElevatorFeedforward implements ProtobufSerializable, StructSerializable {
-    public double s;
-    public double g;
-    public double v;
-    public double a;
+public class ElevatorFeedforward implements ProtobufSerializable, StructSerializable, Sendable, AutoCloseable {
+    private double s;
+    private double g;
+    private double v;
+    private double a;
 
     public ElevatorFeedforward(double s, double g, double v, double a) {
         this.s = s;
@@ -40,5 +42,53 @@ public class ElevatorFeedforward implements ProtobufSerializable, StructSerializ
             return g + s * Math.signum(currentVelocity)
                    + 1.0 / Bd * (nextVelocity - Ad * currentVelocity);
         }
+    }
+
+    public double getS() {
+        return s;
+    } 
+
+    public void setS(double s) {
+        this.s = s;
+    }
+
+    public double getG() {
+        return g;
+    }
+
+    public void setG(double g) {
+        this.g = g;
+    }
+
+    public double getV() {
+        return v;
+    } 
+
+    public void setV(double v) {
+        this.v = v;
+    }
+
+    public double getA() {
+        return a;
+    }
+    public void setA(double a) {
+        this.a = a;
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.setSmartDashboardType("Feedforward");
+        builder.addDoubleProperty("s", this::getS, this::setS);
+        builder.addDoubleProperty("g", this::getG, this::setG);
+        builder.addDoubleProperty("v", this::getV, this::setV);
+        builder.addDoubleProperty("a", this::getA, this::setA);
+        // TODO Auto-generated method stub
+        // throw new UnsupportedOperationException("Unimplemented method 'initSendable'");
+    }
+
+    @Override
+    public void close() throws Exception {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'close'");
     }
 }

@@ -23,35 +23,28 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.util.ElevatorFeedforward;
 
 public class WPIElevator implements AutoCloseable {
-  private double p = 0;
-  private double i = 0;
-  private double d = 0;
   // This gearbox represents a gearbox containing 4 Vex 775pro motors.
-  private final DCMotor m_elevatorGearbox = DCMotor.getNEO(2);
+  private static final DCMotor m_elevatorGearbox = DCMotor.getNEO(2);
 
-  private final ExponentialProfile m_profile =
+  private static final ExponentialProfile m_profile =
       new ExponentialProfile(
           ExponentialProfile.Constraints.fromCharacteristics(
               Constants.kElevatorMaxV, Constants.kElevatorkV, Constants.kElevatorkA));
 
-  private ExponentialProfile.State m_setpoint = new ExponentialProfile.State(0, 0);
+  private static ExponentialProfile.State m_setpoint = new ExponentialProfile.State(0, 0);
 
   // Standard classes for controlling our elevator
-  private final PIDController m_pidController =
-      new PIDController(p, i, d);
+  private static final PIDController m_pidController =
+      new PIDController(0, 0, 0);
+  private static final ElevatorFeedforward m_feedforward =
+      new ElevatorFeedforward(0, 0, 0, 0);
 
-  ElevatorFeedforward m_feedforward =
-      new ElevatorFeedforward(
-          Constants.kElevatorkS,
-          Constants.kElevatorkG,
-          Constants.kElevatorkV,
-          Constants.kElevatorkA);
-  private final Encoder m_encoder =
+  private static final Encoder m_encoder =
       new Encoder(Constants.kEncoderAChannel, Constants.kEncoderBChannel);
-  private final PWMSparkMax m_motor = new PWMSparkMax(Constants.kMotorPort);
+  private static final PWMSparkMax m_motor = new PWMSparkMax(Constants.kMotorPort);
 
   // Simulation classes help us simulate what's going on, including gravity.
-  private final ElevatorSim m_elevatorSim =
+  private static final ElevatorSim m_elevatorSim =
       new ElevatorSim(
           m_elevatorGearbox,
           Constants.kElevatorGearing,
@@ -63,42 +56,34 @@ public class WPIElevator implements AutoCloseable {
           0,
           0.005,
           0.0);
-  private final EncoderSim m_encoderSim = new EncoderSim(m_encoder);
-  private final PWMSim m_motorSim = new PWMSim(m_motor);
+  private static final EncoderSim m_encoderSim = new EncoderSim(m_encoder);
+  private static final PWMSim m_motorSim = new PWMSim(m_motor);
 
   // Create a Mechanism2d visualization of the elevator
-  private final Mechanism2d m_mech2d =
+  private static final Mechanism2d m_mech2d =
       new Mechanism2d(Units.inchesToMeters(10), Units.inchesToMeters(100));
-  private final MechanismRoot2d m_mech2dRoot =
+  private static final MechanismRoot2d m_mech2dRoot =
       m_mech2d.getRoot("Elevator Root", Units.inchesToMeters(5), Units.inchesToMeters(2));
-  private final MechanismLigament2d m_elevatorMech2d =
+  private static final MechanismLigament2d m_elevatorMech2d =
       m_mech2dRoot.append(
           new MechanismLigament2d("Elevator", m_elevatorSim.getPositionMeters(), 90));
 
   /** Subsystem constructor. */
   public WPIElevator() {
-    SmartDashboard.putNumber("P", p);
-    SmartDashboard.putNumber("I", i);
-    SmartDashboard.putNumber("D", d);
+    SmartDashboard.putData("ElevatorSim/PID", m_pidController);
+    SmartDashboard.putData("ElevatorSim/Feedforward", m_feedforward);
+    SmartDashboard.putData("ElevatorSim/Simulator", m_mech2d);
 
     m_encoder.setDistancePerPulse(Constants.kElevatorEncoderDistPerPulse);
 
     // Publish Mechanism2d to SmartDashboard
     // To view the Elevator visualization, select Network Tables -> SmartDashboard -> Elevator Sim
-    SmartDashboard.putData("Elevator Sim", m_mech2d);
   }
 
   /** Advance the simulation. */
   public void simulationPeriodic() {
-    SmartDashboard.putNumber("Position", Units.metersToInches(m_elevatorSim.getPositionMeters()));
-    SmartDashboard.putNumber("Setpoint", Units.metersToInches(m_pidController.getSetpoint()));
-    p = SmartDashboard.getNumber("P", p);
-    i = SmartDashboard.getNumber("I", i);
-    d = SmartDashboard.getNumber("D", d);
-
-    m_pidController.setP(p);
-    m_pidController.setI(i);
-    m_pidController.setD(d);
+    SmartDashboard.putNumber("ElevatorSim/Position", Units.metersToInches(m_elevatorSim.getPositionMeters()));
+    SmartDashboard.putNumber("ElevatorSim/Setpoint", Units.metersToInches(m_pidController.getSetpoint()));
 
     // In this method, we update our simulation of what our elevator is doing
     // First, we set our "inputs" (voltages)
