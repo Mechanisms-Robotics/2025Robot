@@ -8,7 +8,7 @@ public class Constants {
        higher. This can happen in certain swerve orientations in which some wheels are used more than others. */
     public static final double maxVelocity = 4.25; // m/s
     public static final double maxAngularVelocity = 6 * 2; // tau is 2 pi, or one rotation
-    public static final double weightPounds = 80;
+    public static final double weightPounds = 96;
     public static final double weightKilos = poundsToKg(weightPounds);
     public static double poundsToKg(double pounds) { return pounds * 0.4536; };    
     public static RobotConfig config;

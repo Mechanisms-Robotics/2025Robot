@@ -1,18 +1,17 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.sim.SparkMaxAlternateEncoderSim;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkMaxAlternateEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Elevator extends SubsystemBase {
@@ -31,8 +30,9 @@ public class Elevator extends SubsystemBase {
     public final int BARGE = 0;
 
     // TODO: Set CAN ids
+    // changed follower id to 1 because simulator did not like duplicate ids
     private final int LEADER_CAN_ID = 0;
-    private final int FOLLOWER_CAN_ID = 0;
+    private final int FOLLOWER_CAN_ID = 1;
 
     // Motor controllers: one leader and one follower
     private final SparkMax m_leader;
@@ -45,9 +45,9 @@ public class Elevator extends SubsystemBase {
     private final SparkClosedLoopController m_sparkClosedLoopController;
 
     // PID gains TODO: Tune
-    private static final double KP = 0.0;
-    private static final double KI = 0.0;
-    private static final double KD = 0.0;
+    private static final double kP = 0.0;
+    private static final double kI = 0.0;
+    private static final double kD = 0.0;
     private static final double MIN_OUTPUT = 0.0;
     private static final double MAX_OUTPUT = 0.0;
 
@@ -65,13 +65,14 @@ public class Elevator extends SubsystemBase {
         // Ref https://docs.revrobotics.com/revlib/spark/closed-loop/closed-loop-control-getting-started
         // and see what we can do to tune and improve the control.
 
+        // the second spark max is a follower because both of these motors controll the elevator and it is inverted because of the gearing mechanics
         SparkMaxConfig leaderConfig = new SparkMaxConfig();
         SparkMaxConfig followerConfig = new SparkMaxConfig();
 
         leaderConfig.closedLoop
-            .p(KP)
-            .i(KI)
-            .d(KD)
+            .p(kP)
+            .i(kI)
+            .d(kD)
             .outputRange(MIN_OUTPUT, MAX_OUTPUT);
 
         followerConfig.follow(m_leader, true /* inverted */);
@@ -88,6 +89,8 @@ public class Elevator extends SubsystemBase {
 
     /**
      * Sets the desired elevator position.
+     * After the desired elevator position is set, the motor controller will start adjusting the motor position to match
+     * with the desired elevator position
      *
      * @param position The target position
      */
@@ -97,6 +100,8 @@ public class Elevator extends SubsystemBase {
         m_sparkClosedLoopController.setReference(
             position,
             ControlType.kPosition,
+            /* currenlty no reason for this to be anything other than slot0, we might use another slot if we want something
+            like a faster pid controller for barge and a slower more precise controller for reef */
             ClosedLoopSlot.kSlot0, // TODO
             feed_forward);
     }
