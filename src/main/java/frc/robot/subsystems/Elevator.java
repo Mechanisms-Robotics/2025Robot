@@ -70,9 +70,7 @@ public class Elevator extends SubsystemBase {
         SparkMaxConfig followerConfig = new SparkMaxConfig();
 
         leaderConfig.closedLoop
-            .p(kP)
-            .i(kI)
-            .d(kD)
+            .pidf(0.0, 0.0, 0.0, 0.0)
             .outputRange(MIN_OUTPUT, MAX_OUTPUT);
 
         followerConfig.follow(m_leader, true /* inverted */);
@@ -81,6 +79,7 @@ public class Elevator extends SubsystemBase {
         m_follower.configure(followerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // Get the encoder from the leader (the throughbore encoder on the output shaft)
+        // this doesn't work in simulator
         m_output_encoder = m_leader.getAlternateEncoder();
 
         // The onboard controller

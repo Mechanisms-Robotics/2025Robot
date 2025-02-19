@@ -31,7 +31,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
   Swerve swerve = new Swerve();
-  Elevator elevator = new Elevator();
+  Elevator elevator;
   WPIElevator wpiElevator = new WPIElevator();
   
   Test test = new Test();
@@ -49,17 +49,22 @@ public class Robot extends TimedRobot {
     //  autoChooser.addOption("My Auto", kCustomAuto);
      SmartDashboard.putData("Auto choices", autoChooser);
 
-     if (Robot.isSimulation()) {
+      if (Robot.isSimulation()) {
         swerve.setClosedLoop();
-        
+        DriverStation.silenceJoystickConnectionWarning(true);
+      } else {
+        // declaring and elevator in sim dies because it cannot handle alternative encoders
+        elevator = new Elevator();
+      }
+      if (Constants.usingKeyboard) {
+        Joystick awsd = new Joystick(2);
         swerve.setDefaultCommand(
            new RunCommand(() -> swerve.teleopDrive(
               ()->ps4Controller.getLeftX(),
               ()->-ps4Controller.getLeftY(),
-              ()->ps4Controller.getRightX()
+              ()->awsd.getX()
           ), swerve)
         );
-        DriverStation.silenceJoystickConnectionWarning(true);
       } else {
         swerve.setDefaultCommand(
            // TODO these arguments are wrong, figure it out
@@ -68,7 +73,7 @@ public class Robot extends TimedRobot {
                ()->-ps4Controller.getLeftY(),
                ()->-ps4Controller.getRightX()
            ), swerve)
-        );
+        );        
       }
       //new Trigger(() -> shifter.getRawButtonPressed(8)).whileTrue(new RunCommand(() -> elevator.setLevel(0)));
       new Trigger(() -> shifter.getRawButtonPressed(1)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(5))));
