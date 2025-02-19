@@ -125,8 +125,8 @@ public class SwerveModule extends SubsystemBase {
             currentAngle = new Rotation2d(canCoder.getAbsolutePosition().getValueAsDouble() + steerOffset);
         }
 
-        SmartDashboard.putNumber("[" + moduleName + "] Current Angle", currentAngle.getDegrees());
-        SmartDashboard.putNumber("[" + moduleName + "] Desired Angle", desiredAngle.getDegrees());
+        SmartDashboard.putNumber(moduleName + "/Current Angle", currentAngle.getDegrees());
+        SmartDashboard.putNumber(moduleName + "/Desired Angle", desiredAngle.getDegrees());
 
         steerPidController.setSetpoint(desiredAngle.getRadians());
         steerPpidController.setGoal(desiredAngle.getRadians());
@@ -160,9 +160,9 @@ public class SwerveModule extends SubsystemBase {
             drivePidController.setSetpoint(currentVelocity);
         }
 
-        SmartDashboard.putNumber("[" + moduleName + "] Current Velocity", currentVelocity);
-        SmartDashboard.putNumber("[" + moduleName + "] Desired Velocity", desiredVelocity);
-        SmartDashboard.putNumber("[" + moduleName + "] Velocity Error", Math.abs(desiredVelocity - currentVelocity));
+        SmartDashboard.putNumber(moduleName + "/Current Velocity", currentVelocity);
+        SmartDashboard.putNumber(moduleName + "/Desired Velocity", desiredVelocity);
+        SmartDashboard.putNumber(moduleName + "/Velocity Error", Math.abs(desiredVelocity - currentVelocity));
 
         // TODO: Smartdashboard outputs
     }
