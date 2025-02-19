@@ -4,7 +4,12 @@
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Alerts": "Alerts",
       "/SmartDashboard/Auto choices": "String Chooser",
-      "/SmartDashboard/Field": "Field2d"
+      "/SmartDashboard/Drive PID Controller": "PIDController",
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Swerve/Stabilize Controller": "PIDController",
+      "/SmartDashboard/SwerveModules/Drive Profiled PID Controller": "ProfiledPIDController",
+      "/SmartDashboard/SwerveModules/Steer Feedforward": "ProfiledPIDController",
+      "/SmartDashboard/SwerveModules/Steer PID Controller": "PIDController"
     },
     "windows": {
       "/FMSInfo": {
@@ -13,15 +18,43 @@
         }
       },
       "/SmartDashboard/Field": {
-        "bottom": 1476,
-        "height": 8.210550308227539,
-        "left": 150,
-        "right": 2961,
-        "top": 79,
-        "width": 16.541748046875,
+        "bottom": 1638,
+        "builtin": "2025 Reefscape",
+        "height": 8.051901817321777,
+        "left": 534,
+        "right": 3466,
+        "top": 291,
+        "width": 17.54825210571289,
         "window": {
           "visible": true
         }
+      }
+    }
+  },
+  "NetworkTables": {
+    "transitory": {
+      "SmartDashboard": {
+        "CoralMech": {
+          "open": true
+        },
+        "Drive PID Controller": {
+          "open": true
+        },
+        "FR Module": {
+          "open": true
+        },
+        "Swerve": {
+          "open": true
+        },
+        "SwerveModules": {
+          "Drive PID Controller": {
+            "open": true
+          },
+          "Drive Profiled PID Controller": {
+            "open": true
+          }
+        },
+        "open": true
       }
     }
   },
