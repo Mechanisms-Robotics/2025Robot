@@ -17,8 +17,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.simulation.WPIElevator;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorSimu;
 import frc.robot.subsystems.swerve.Swerve;
 
 /**
@@ -32,7 +32,7 @@ public class Robot extends TimedRobot {
 
   Swerve swerve = new Swerve();
   Elevator elevator;
-  WPIElevator wpiElevator = new WPIElevator();
+  ElevatorSimu elevatorSimu = new ElevatorSimu();
   
   Test test = new Test();
 
@@ -75,8 +75,8 @@ public class Robot extends TimedRobot {
         );        
       }
       //new Trigger(() -> shifter.getRawButtonPressed(8)).whileTrue(new RunCommand(() -> elevator.setLevel(0)));
-      new Trigger(() -> shifter.getRawButton(1)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(10))));
-      new Trigger(() -> shifter.getRawButton(2)).whileTrue(new RunCommand(() -> wpiElevator.reachGoal(Units.inchesToMeters(60))));
+      new Trigger(() -> shifter.getRawButton(1)).whileTrue(new RunCommand(() -> elevatorSimu.reachGoal(Units.inchesToMeters(10))));
+      new Trigger(() -> shifter.getRawButton(2)).whileTrue(new RunCommand(() -> elevatorSimu.reachGoal(Units.inchesToMeters(60))));
       //new Trigger(() -> shifter.getRawButtonPressed(3)).whileTrue(new RunCommand(() -> elevator.setLevel(3)));
       //new Trigger(() -> shifter.getRawButtonPressed(4)).whileTrue(new RunCommand(() -> elevator.setLevel(4)));
     }
@@ -90,7 +90,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    wpiElevator.updateTelemetry();
+    elevatorSimu.updateTelemetry();
     // Command don't run without this
     CommandScheduler.getInstance().run();
   }
@@ -120,7 +120,7 @@ public class Robot extends TimedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
-    wpiElevator.reset();
+    elevatorSimu.reset();
     /* When is teleop, run the swerve in open loop because we don't do closed loop for driving */
     if (!Robot.isSimulation()) {
       swerve.setOpenLoop();
@@ -138,7 +138,7 @@ public class Robot extends TimedRobot {
   /** This function is called periodically when disabled. */
   @Override
   public void disabledPeriodic() {
-    wpiElevator.stop();
+    elevatorSimu.stop();
   }
 
   /** This function is called once when test mode is enabled. */
@@ -159,6 +159,6 @@ public class Robot extends TimedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {
-    wpiElevator.simulationPeriodic();
+    elevatorSimu.simulationPeriodic();
   }
 }

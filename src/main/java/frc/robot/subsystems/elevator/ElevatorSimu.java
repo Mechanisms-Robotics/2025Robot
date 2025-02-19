@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.simulation;
+package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -20,9 +20,10 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.simulation.Constants;
 import frc.robot.util.ElevatorFeedforward;
 
-public class WPIElevator implements AutoCloseable {
+public class ElevatorSimu implements AutoCloseable {
   // This gearbox represents a gearbox containing 4 Vex 775pro motors.
   private static final DCMotor m_elevatorGearbox = DCMotor.getNEO(2);
 
@@ -40,7 +41,7 @@ public class WPIElevator implements AutoCloseable {
       new ElevatorFeedforward(0, 0, 0, 0);
 
   private static final Encoder m_encoder =
-      new Encoder(Constants.kEncoderAChannel, Constants.kEncoderBChannel);
+      new Encoder(0, 1);
   private static final PWMSparkMax m_motor = new PWMSparkMax(Constants.kMotorPort);
 
   // Simulation classes help us simulate what's going on, including gravity.
@@ -69,7 +70,7 @@ public class WPIElevator implements AutoCloseable {
           new MechanismLigament2d("Elevator", m_elevatorSim.getPositionMeters(), 90));
 
   /** Subsystem constructor. */
-  public WPIElevator() {
+  public ElevatorSimu() {
     SmartDashboard.putData("ElevatorSim/PID", m_pidController);
     SmartDashboard.putData("ElevatorSim/Feedforward", m_feedforward);
     SmartDashboard.putData("ElevatorSim/Simulator", m_mech2d);
