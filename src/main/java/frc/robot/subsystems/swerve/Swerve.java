@@ -84,7 +84,8 @@ public class Swerve extends SubsystemBase {
         stabilizeController = new PIDController(0, 0, 0);
         stabilizeController.setTolerance(0.1); // ???
 
-        System.out.println(Constants.config);
+        SmartDashboard.putData("Swerve/Stabilize Controller", stabilizeController);
+
         AutoBuilder.configure(
             this::getPose,
             this::resetPose,
@@ -258,9 +259,9 @@ public class Swerve extends SubsystemBase {
     public void periodic() {
         poseEstimator.update(getHeading(), getModulePositions());
 
-        SmartDashboard.putNumber("[Swerve] x", getPose().getX());
-        SmartDashboard.putNumber("[Swerve] y", getPose().getY());
-        SmartDashboard.putNumber("[Swerve] Heading", getHeading().getDegrees());
+        SmartDashboard.putNumber("Swerve/x", getPose().getX());
+        SmartDashboard.putNumber("Swerve/y", getPose().getY());
+        SmartDashboard.putNumber("Heading", getHeading().getDegrees());
 
         field.setRobotPose(getPose());
         drawModules();

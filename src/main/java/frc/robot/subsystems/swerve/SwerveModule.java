@@ -23,18 +23,18 @@ import frc.robot.Robot;
 public class SwerveModule extends SubsystemBase {
     private final double steerOffset = 0.0;
     // TODO: tune pid controllers
-    private final PIDController drivePidController =
+    private static final PIDController drivePidController =
             new PIDController(1, 0, 0);
 
-    private final ProfiledPIDController drivePpidController =
+    private static final ProfiledPIDController drivePpidController =
             new ProfiledPIDController(1, 0, 0, new Constraints(0.0, 0.0));
 
-    private final PIDController steerPidController = new PIDController(1, 0, 0);
+    private static final PIDController steerPidController = new PIDController(1, 0, 0);
 
-    private final ProfiledPIDController steerPpidController =
+    private static final ProfiledPIDController steerPpidController =
             new ProfiledPIDController(1, 0, 0, new Constraints(0.0, 0.0));
 
-    private final SimpleMotorFeedforward steerFeedforwardController =
+    private static final SimpleMotorFeedforward steerFeedforwardController =
             new SimpleMotorFeedforward(1.0, 0.0, 0.0);
 
     /* Default to open loop. Closed loop is used for PID control over the driving rather than just the steering. */
@@ -52,6 +52,16 @@ public class SwerveModule extends SubsystemBase {
     private final TalonFX driveMotor;
     private final SparkMax steerMotor;
     private final CANcoder canCoder;
+    private double x = 0;
+
+    static {
+        SmartDashboard.putData("SwerveModules/Drive PID Controller", drivePidController);
+        SmartDashboard.putData("SwerveModules/Drive Profiled PID Controller", drivePpidController);
+        SmartDashboard.putData("SwerveModules/Steer PID Controller", drivePidController);
+        SmartDashboard.putData("SwerveModules/Steer Profiled PID Controller", steerPpidController);
+        SmartDashboard.putData("SwerveModules/Steer Feedforward", steerPpidController);
+        // TODO: steerFeedforwardController
+    }
 
     // TODO: add relevant documentation or delete this if unnecessary
     public SwerveModule(String moduleName, int driveMotorID, int steerMotorID,
@@ -73,7 +83,7 @@ public class SwerveModule extends SubsystemBase {
         // TODO finish drive motor configuraiton
 
         // TODO: consider trying continuous input for steer controller because it handles shortest path
-        // steerPidController.enableContinuousInput();
+        steerPidController.enableContinuousInput(0, 180);
     }
 
     public void setState(SwerveModuleState state) {
