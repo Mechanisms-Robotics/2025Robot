@@ -1,8 +1,12 @@
 package frc.robot.subsystems.swerve;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -78,11 +82,14 @@ public class SwerveModule extends SubsystemBase {
             .inverted(steerInverted)
             .idleMode(IdleMode.kBrake);
 
-            // TODO finish steer motor configuration
-            // TODO finish drive motor configuraiton
-            
-            // TODO: consider trying continuous input for steer controller because it handles shortest path
-            steerPidController.enableContinuousInput(0, 180);
+        steerMotor.configure(steerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        TalonFXConfiguration driveConfig = new TalonFXConfiguration();
+        driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        
+        driveMotor.getConfigurator().apply(driveConfig);
+
+        // steerPidController.enableContinuousInput(0, 180);
     }
 
     public void setState(SwerveModuleState state) {
