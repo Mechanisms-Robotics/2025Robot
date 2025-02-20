@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.elevator;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.sim.SparkMaxAlternateEncoderSim;
