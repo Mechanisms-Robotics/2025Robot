@@ -4,7 +4,13 @@
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Alerts": "Alerts",
       "/SmartDashboard/Auto choices": "String Chooser",
-      "/SmartDashboard/Field": "Field2d"
+      "/SmartDashboard/Encoders": "Alerts",
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/IMU": "Alerts",
+      "/SmartDashboard/JSON": "Alerts",
+      "/SmartDashboard/Motors": "Alerts",
+      "/SmartDashboard/Pigeon IMU [0]": "Gyro",
+      "/SmartDashboard/Swerve Drive": "Alerts"
     },
     "windows": {
       "/FMSInfo": {
@@ -21,6 +27,19 @@
         "width": 16.541748046875,
         "window": {
           "visible": true
+        }
+      }
+    }
+  },
+  "NetworkTables": {
+    "transitory": {
+      "SmartDashboard": {
+        "open": true,
+        "swerve": {
+          "double[]##v_/SmartDashboard/swerve/wheelLocation": {
+            "open": true
+          },
+          "open": true
         }
       }
     }

@@ -4,9 +4,13 @@
 
 package frc.robot;
 
+import java.io.File;
+
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -14,7 +18,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
+import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swerve.Swerve;
+import swervelib.SwerveInputStream;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -25,11 +31,62 @@ import frc.robot.subsystems.swerve.Swerve;
 public class Robot extends TimedRobot {
   private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
-  Swerve swerve = new Swerve();
-  Test test = new Test();
+  Swerve swerve =  new Swerve(new File(Filesystem.getDeployDirectory(),
+                                        "swerve"));;
 
   CommandPS4Controller ps4Controller = new CommandPS4Controller(0);
 
+
+    /**
+   * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
+   */
+  SwerveInputStream driveAngularVelocity = SwerveInputStream.of(swerve.getSwerveDrive(),
+                                                                () -> ps4Controller.getLeftY() * -1,
+                                                                () -> ps4Controller.getLeftX() * -1)
+                                                            .withControllerRotationAxis(ps4Controller::getRightX)
+                                                            .deadband(OperatorConstants.DEADBAND)
+                                                            .scaleTranslation(0.8)
+                                                            .allianceRelativeControl(true);
+
+  /**
+   * Clone's the angular velocity input stream and converts it to a fieldRelative input stream.
+   */
+  SwerveInputStream driveDirectAngle = driveAngularVelocity.copy().withControllerHeadingAxis(ps4Controller::getRightX,
+                                                                                             ps4Controller::getRightY)
+                                                           .headingWhile(true);
+
+  /**
+   * Clone's the angular velocity input stream and converts it to a robotRelative input stream.
+   */
+  SwerveInputStream driveRobotOriented = driveAngularVelocity.copy().robotRelative(true)
+                                                             .allianceRelativeControl(false);
+                                                             
+  Joystick awsd = new Joystick(1);
+  SwerveInputStream driveAngularVelocityKeyboard = SwerveInputStream.of(swerve.getSwerveDrive(),
+                                                                        () -> -ps4Controller.getLeftX(),
+                                                                        () -> ps4Controller.getRawAxis(1))
+                                                                    .withControllerRotationAxis(() -> -awsd.getX())
+                                                                    .deadband(OperatorConstants.DEADBAND)
+                                                                    .scaleTranslation(0.8)
+                                                                    .allianceRelativeControl(true);
+
+  // Derive the heading axis with math!
+  SwerveInputStream driveDirectAngleKeyboard     = driveAngularVelocityKeyboard.copy()
+                                                                               .withControllerHeadingAxis(() ->
+                                                                                                              Math.sin(
+                                                                                                                  ps4Controller.getRawAxis(
+                                                                                                                      1) *
+                                                                                                                  Math.PI) *
+                                                                                                              (Math.PI *
+                                                                                                               2),
+                                                                                                          () ->
+                                                                                                              Math.cos(
+                                                                                                                  awsd.getX() * (
+                                                                                                                      2) *
+                                                                                                                  Math.PI) *
+                                                                                                              (Math.PI *
+                                                                                                               2))
+                                                                               .headingWhile(true);
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -40,25 +97,17 @@ public class Robot extends TimedRobot {
     //  autoChooser.addOption("My Auto", kCustomAuto);
      SmartDashboard.putData("Auto choices", autoChooser);
 
+    Command driveFieldOrientedDirectAngleKeyboard  = swerve.driveFieldOriented(driveDirectAngleKeyboard);
+    Command driveFieldOrientedAnglularVelocityKeyboard = swerve.driveFieldOriented(driveAngularVelocityKeyboard);
+    Command driveFieldOrientedAnglularVelocity = swerve.driveFieldOriented(driveAngularVelocity);
+
      if (Robot.isSimulation()) {
-        swerve.setClosedLoop();
         swerve.setDefaultCommand(
-           new RunCommand(() -> swerve.teleopDrive(
-              ()->ps4Controller.getLeftX(),
-              ()->-ps4Controller.getLeftY(),
-              ()->ps4Controller.getRightX()
-          ), swerve)
+           driveFieldOrientedAnglularVelocityKeyboard
         );
         DriverStation.silenceJoystickConnectionWarning(true);
       } else {
-        swerve.setDefaultCommand(
-           // TODO these arguments are wrong, figure it out
-            new RunCommand(() -> swerve.teleopDrive(
-               ()->-ps4Controller.getLeftX(),
-               ()->-ps4Controller.getLeftY(),
-               ()->-ps4Controller.getRightX()
-           ), swerve)
-        );
+        swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
       }
   }
 
@@ -89,7 +138,6 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     if (autoChooser.getSelected() != null) {
       autoChooser.getSelected().schedule();
-      swerve.setClosedLoop();
     }
   }
 
@@ -102,7 +150,6 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
     /* When is teleop, run the swerve in open loop because we don't do closed loop for driving */
     if (!Robot.isSimulation()) {
-      swerve.setOpenLoop();
     }
   }
 

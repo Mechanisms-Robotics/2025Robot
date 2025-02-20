@@ -19,5 +19,15 @@ public class Constants {
             e.printStackTrace();
         };
     };
+
+    public static class OperatorConstants
+    {
+  
+      // Joystick Deadband
+      public static final double DEADBAND        = 0.1;
+      public static final double LEFT_Y_DEADBAND = 0.1;
+      public static final double RIGHT_X_DEADBAND = 0.1;
+      public static final double TURN_CONSTANT    = 6;
+    }
 }
 
