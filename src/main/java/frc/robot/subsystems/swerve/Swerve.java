@@ -33,7 +33,7 @@ public class Swerve extends SubsystemBase {
        This is used to calculate PID values and for autonomous */ 
     private final Pigeon2 gyro = new Pigeon2(0);
     private final double width = Units.inchesToMeters(27);
-    private final double length = Units.inchesToMeters(36+1/16);
+    private final double length = Units.inchesToMeters(32+1/16);
     /* Swerve module locations, used by the program to compute kinematics going from a
        desired velocity and direction to the need motor outputs on each module. */
     private final Translation2d flModuleLocation = new Translation2d(width/2, length/2);
