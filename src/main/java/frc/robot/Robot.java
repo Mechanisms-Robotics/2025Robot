@@ -7,6 +7,7 @@ package frc.robot;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -42,15 +43,27 @@ public class Robot extends TimedRobot {
     //  autoChooser.addOption("My Auto", kCustomAuto);
      SmartDashboard.putData("Auto choices", autoChooser);
 
-     if (Robot.isSimulation()) {
+    if (Robot.isSimulation()) {
+      swerve.setClosedLoop();
+      if (Constants.usingKeyboard) {
+        Joystick awsd = new Joystick(1);
         swerve.setClosedLoop();
         swerve.setDefaultCommand(
            new RunCommand(() -> swerve.teleopDrive(
               ()->ps4Controller.getLeftX(),
               ()->-ps4Controller.getLeftY(),
-              ()->ps4Controller.getRightX()
-          ), swerve)
+              ()->-awsd.getX()
+            ), swerve)
         );
+      } else {
+        swerve.setDefaultCommand(
+           new RunCommand(() -> swerve.teleopDrive(
+              ()->ps4Controller.getLeftX(),
+              ()->-ps4Controller.getLeftY(),
+              ()->ps4Controller.getRightX()
+            ), swerve)
+        );
+      }
         DriverStation.silenceJoystickConnectionWarning(true);
       } else {
         swerve.setDefaultCommand(

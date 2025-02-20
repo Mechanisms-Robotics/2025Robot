@@ -23,18 +23,18 @@ import frc.robot.Robot;
 public class SwerveModule extends SubsystemBase {
     private final double steerOffset = 0.0;
     // TODO: tune pid controllers
-    private static final PIDController drivePidController =
+    private final PIDController drivePidController =
             new PIDController(1, 0, 0);
 
-    private static final ProfiledPIDController drivePpidController =
+    private final ProfiledPIDController drivePpidController =
             new ProfiledPIDController(1, 0, 0, new Constraints(0.0, 0.0));
 
-    private static final PIDController steerPidController = new PIDController(1, 0, 0);
+    private final PIDController steerPidController = new PIDController(1, 0, 0);
 
-    private static final ProfiledPIDController steerPpidController =
+    private final ProfiledPIDController steerPpidController =
             new ProfiledPIDController(1, 0, 0, new Constraints(0.0, 0.0));
 
-    private static final SimpleMotorFeedforward steerFeedforwardController =
+    private final SimpleMotorFeedforward steerFeedforwardController =
             new SimpleMotorFeedforward(1.0, 0.0, 0.0);
 
     /* Default to open loop. Closed loop is used for PID control over the driving rather than just the steering. */
@@ -54,36 +54,35 @@ public class SwerveModule extends SubsystemBase {
     private final CANcoder canCoder;
     private double x = 0;
 
-    static {
-        SmartDashboard.putData("SwerveModules/Drive PID Controller", drivePidController);
-        SmartDashboard.putData("SwerveModules/Drive Profiled PID Controller", drivePpidController);
-        SmartDashboard.putData("SwerveModules/Steer PID Controller", drivePidController);
-        SmartDashboard.putData("SwerveModules/Steer Profiled PID Controller", steerPpidController);
-        SmartDashboard.putData("SwerveModules/Steer Feedforward", steerPpidController);
-        // TODO: steerFeedforwardController
-    }
-
+    // TODO: steerFeedforwardController
+    
     // TODO: add relevant documentation or delete this if unnecessary
     public SwerveModule(String moduleName, int driveMotorID, int steerMotorID,
-                        boolean driveInverted, boolean steerInverted,
-                        int encoderID, double encoderOffset) {
+    boolean driveInverted, boolean steerInverted,
+    int encoderID, double encoderOffset) {
+        
         this.driveMotor = new TalonFX(driveMotorID);
         this.steerMotor = new SparkMax(steerMotorID, MotorType.kBrushless);
         this.canCoder = new CANcoder(encoderID);
-
+        
         this.moduleName = moduleName;
-
+        SmartDashboard.putData(this.moduleName + "/Drive PID Controller", drivePidController);
+        SmartDashboard.putData(this.moduleName + "/Drive Profiled PID Controller", drivePpidController);
+        SmartDashboard.putData(this.moduleName + "/Steer PID Controller", drivePidController);
+        SmartDashboard.putData(this.moduleName + "/Steer Profiled PID Controller", steerPpidController);    
+        SmartDashboard.putData(this.moduleName + "/Steer Feedforward", steerPpidController);
+        
         // Configure motors
         SparkMaxConfig steerConfig = new SparkMaxConfig();
         steerConfig
             .inverted(steerInverted)
             .idleMode(IdleMode.kBrake);
 
-        // TODO finish steer motor configuration
-        // TODO finish drive motor configuraiton
-
-        // TODO: consider trying continuous input for steer controller because it handles shortest path
-        steerPidController.enableContinuousInput(0, 180);
+            // TODO finish steer motor configuration
+            // TODO finish drive motor configuraiton
+            
+            // TODO: consider trying continuous input for steer controller because it handles shortest path
+            steerPidController.enableContinuousInput(0, 180);
     }
 
     public void setState(SwerveModuleState state) {

@@ -56,17 +56,17 @@ public class Swerve extends SubsystemBase {
              5, 0);
 
      private final SwerveModule frModule = new SwerveModule("FR Module",
-             1, 6,
+             2, 6,
              false, false,
              5, 0);
 
      private final SwerveModule blModule = new SwerveModule("BL Module",
-             1, 7,
+             3, 7,
              false, false,
              5, 0);
 
      private final SwerveModule brModule = new SwerveModule("BR Module",
-             1, 8,
+             4, 8,
              false, false,
              5, 0);
 
