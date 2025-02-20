@@ -15,15 +15,21 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class AlgaeMech extends SubsystemBase {
     private static final SparkMax wristMotor = new SparkMax(0, MotorType.kBrushed);
-    private static final SparkMax motorL = new SparkMax(1, MotorType.kBrushed);
-    private static final SparkMax motorR = new SparkMax(2, MotorType.kBrushed);
+    private static final SparkMax motorL = new SparkMax(10, MotorType.kBrushed);
+    private static final SparkMax motorR = new SparkMax(12, MotorType.kBrushed);
     private static final CANcoder canCoder = new CANcoder(12);
 
+    enum State {
+      INTAKING,
+      IDLE
+    }
+
+    State state = State.INTAKING;
     /**
      * Class containing all the variables that can be tunned in smartdashboard for Algae Mech
      */
     private class Tunnable implements Sendable {
-        private double intakeVoltage = 1;
+        private double intakeVoltage = 5;
 
         @Override
         public void initSendable(SendableBuilder builder) {
@@ -51,8 +57,25 @@ public class AlgaeMech extends SubsystemBase {
 
 
     public void intake() {
+
         motorL.setVoltage(tunes.intakeVoltage);
         motorR.setVoltage(-tunes.intakeVoltage);
+        state = State.INTAKING;
+        
+    }
+
+    public void stop() {
+      motorL.setVoltage(0);
+      motorR.setVoltage(0);
+      state = State.IDLE;
+    }
+
+    public void toggleIntake() {
+      if (state == State.INTAKING) {
+        stop();
+      } else {
+        intake();
+      }
     }
 
     @Override
@@ -62,5 +85,9 @@ public class AlgaeMech extends SubsystemBase {
         SmartDashboard.putNumber("AlgaeMech/Wrist/position", canCoder.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("AlgaeMech/Wrist/position since boot", canCoder.getPositionSinceBoot().getValueAsDouble());
         SmartDashboard.putNumber("AlgaeMech/Wrist/angle", canCoder.getPositionSinceBoot().getValueAsDouble()%.5 * 2 * 360);
+        SmartDashboard.putNumber("AlgaeMech/Left Wheel Motor/Applied Output", motorL.getAppliedOutput());
+        SmartDashboard.putNumber("AlgaeMech/Left Wheel Motor/Applied Output", motorL.getAppliedOutput());
+        SmartDashboard.putNumber("AlgaeMech/Left Wheel Motor/id", motorL.getDeviceId());
+        SmartDashboard.putString("AlgaeMech/State", state.toString());
     }
 }

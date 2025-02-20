@@ -64,6 +64,7 @@ public class Robot extends TimedRobot {
       }
 
       ps4Controller.R1().whileTrue(new RunCommand(algaeMech::intake, algaeMech));
+      ps4Controller.R1().whileFalse(new RunCommand(algaeMech::stop, algaeMech));
   }
 
   /**
