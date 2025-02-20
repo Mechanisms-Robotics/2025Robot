@@ -8,6 +8,8 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -17,10 +19,24 @@ public class AlgaeMech extends SubsystemBase {
     private static final SparkMax motorR = new SparkMax(2, MotorType.kBrushed);
     private static final CANcoder canCoder = new CANcoder(12);
 
-    private static final double intakeVoltage = 1;
+    /**
+     * Class containing all the variables that can be tunned in smartdashboard for Algae Mech
+     */
+    private class Tunnable implements Sendable {
+        private double intakeVoltage = 1;
+
+        @Override
+        public void initSendable(SendableBuilder builder) {
+            builder.setSmartDashboardType("Tunnable Variables");
+            builder.addDoubleProperty("intake voltage", () -> intakeVoltage, (k) -> intakeVoltage = k);
+        }   
+    }
+
+    private final Tunnable tunes;
 
     public AlgaeMech() {
-        SmartDashboard.putNumber("AlgaeMech/intake voltage", intakeVoltage);
+        tunes = new Tunnable();
+        SmartDashboard.putData("AlgaeMech/Tunnable", tunes);
 
         SparkMaxConfig wristConfig = new SparkMaxConfig();
         wristConfig.idleMode(IdleMode.kBrake);
@@ -35,16 +51,16 @@ public class AlgaeMech extends SubsystemBase {
 
 
     public void intake() {
-        motorL.setVoltage(intakeVoltage);
-        motorR.setVoltage(-intakeVoltage);
+        motorL.setVoltage(tunes.intakeVoltage);
+        motorR.setVoltage(-tunes.intakeVoltage);
     }
 
     @Override
     public void periodic() {
         // ranges from -.5-.5
-        SmartDashboard.putNumber("AlgaeMech/absolute position", canCoder.getAbsolutePosition().getValueAsDouble());
-        SmartDashboard.putNumber("AlgaeMech/position", canCoder.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("AlgaeMech/position since boot", canCoder.getPositionSinceBoot().getValueAsDouble());
-        SmartDashboard.putNumber("AlgaeMech/angle", canCoder.getPositionSinceBoot().getValueAsDouble()%.5 * 2 * 360);
+        SmartDashboard.putNumber("AlgaeMech/Wrist/absolute position", canCoder.getAbsolutePosition().getValueAsDouble());
+        SmartDashboard.putNumber("AlgaeMech/Wrist/position", canCoder.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("AlgaeMech/Wrist/position since boot", canCoder.getPositionSinceBoot().getValueAsDouble());
+        SmartDashboard.putNumber("AlgaeMech/Wrist/angle", canCoder.getPositionSinceBoot().getValueAsDouble()%.5 * 2 * 360);
     }
 }
