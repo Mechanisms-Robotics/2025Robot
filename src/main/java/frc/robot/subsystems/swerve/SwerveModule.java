@@ -3,6 +3,7 @@ package frc.robot.subsystems.swerve;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -33,13 +34,13 @@ public class SwerveModule extends SubsystemBase {
     private final ProfiledPIDController drivePpidController =
             new ProfiledPIDController(1, 0, 0, new Constraints(0.0, 0.0));
 
-    private final PIDController steerPidController = new PIDController(1, 0, 0);
+    private final PIDController steerPidController = new PIDController(0.25, 0, 0);
 
     private final ProfiledPIDController steerPpidController =
-            new ProfiledPIDController(1, 0, 0, new Constraints(0.0, 0.0));
+            new ProfiledPIDController(0, 0, 0, new Constraints(0.0, 0.0));
 
     private final SimpleMotorFeedforward steerFeedforwardController =
-            new SimpleMotorFeedforward(1.0, 0.0, 0.0);
+            new SimpleMotorFeedforward(0, 0, 0.0);
 
     /* Default to open loop. Closed loop is used for PID control over the driving rather than just the steering. */
     private boolean closedLoop = false;
@@ -87,6 +88,12 @@ public class SwerveModule extends SubsystemBase {
 
         TalonFXConfiguration driveConfig = new TalonFXConfiguration();
         driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        if (driveInverted) {
+            driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+        } else {
+            driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        }
         
         driveMotor.getConfigurator().apply(driveConfig);
 
@@ -134,8 +141,16 @@ public class SwerveModule extends SubsystemBase {
         this.closedLoop = closedLoop;
     }
 
+    // TODO: wpi units
     public double rotationsToRadians(double rotations) {
         return Rotation2d.fromRotations(rotations).getRadians();
+    }
+
+    public void testHalfPower() {
+        driveMotor.set(.5);
+    }
+    public void test0Voltage() {
+        driveMotor.set(0);
     }
 
     @Override

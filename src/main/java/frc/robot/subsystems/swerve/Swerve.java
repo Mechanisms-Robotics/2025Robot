@@ -53,7 +53,7 @@ public class Swerve extends SubsystemBase {
      // all these values are subject to change
      private final SwerveModule frModule = new SwerveModule("FR Module",
              1, 5,
-             false, false,
+             true, false,
              5, 0);
 
      private final SwerveModule flModule = new SwerveModule("FL Module",
@@ -63,7 +63,7 @@ public class Swerve extends SubsystemBase {
 
      private final SwerveModule blModule = new SwerveModule("BL Module",
              3, 7,
-             false, false,
+             true, false,
              7, 0);
 
      private final SwerveModule brModule = new SwerveModule("BR Module",
@@ -113,6 +113,20 @@ public class Swerve extends SubsystemBase {
         gyro.setYaw(0.0);
     }
 
+    public void testHalfPower() {
+        flModule.testHalfPower();
+        frModule.testHalfPower();
+        blModule.testHalfPower();
+        brModule.testHalfPower();
+    }
+
+    public void test0Voltage() {
+        flModule.test0Voltage();
+        frModule.test0Voltage();
+        blModule.test0Voltage();
+        brModule.test0Voltage();
+    }
+
      /**
       * Drive at given x, y, and angular velocities
       *
@@ -158,6 +172,10 @@ public class Swerve extends SubsystemBase {
         }
     }
 
+    public double deadband(double input) {
+        return Math.abs(input) >= .1 ? input : 0;
+    }
+
      /**
       * Drive the swerve in the desired direction and rotation.
       * Swerve drives at percentage of given velocities.
@@ -168,24 +186,23 @@ public class Swerve extends SubsystemBase {
       * @param percentOmega angular momentum component supplier
       */
     public void teleopDrive(Supplier<Double> percentX, Supplier<Double> percentY, Supplier<Double> percentOmega) {
-        drive(percentX.get() * Constants.maxVelocity,
-              percentY.get() * Constants.maxVelocity,
-              percentOmega.get() * Constants.maxAngularVelocity);
+        drive(deadband(percentX.get()) * Constants.maxVelocity,
+              deadband(percentY.get()) * Constants.maxVelocity,
+              deadband(percentOmega.get()) * Constants.maxAngularVelocity);
     }
 
     public void lock() {
         flModule.steerTo(Rotation2d.fromDegrees(45));
         frModule.steerTo(Rotation2d.fromDegrees(-45));
-        blModule.steerTo(Rotation2d.fromDegrees(45));
-        brModule.steerTo(Rotation2d.fromDegrees(-45));
-        System.out.println("Locking");
+        blModule.steerTo(Rotation2d.fromDegrees(-45));
+        brModule.steerTo(Rotation2d.fromDegrees(45));
     }
 
     public void setModuleStates(SwerveModuleState[] states) {
-        // flModule.setState(states[0]);
-        // frModule.setState(states[1]);
-        // blModule.setState(states[2]);
-        // brModule.setState(states[3]);
+        flModule.setState(states[0]);
+        frModule.setState(states[1]);
+        blModule.setState(states[2]);
+        brModule.setState(states[3]);
     }
 
     public SwerveModulePosition[] getModulePositions() {

@@ -77,8 +77,10 @@ public class Robot extends TimedRobot {
       }
 
 
-      ps4Controller.L1().whileTrue(new RunCommand(swerve::lock, swerve));
-      ps4Controller.R1().whileTrue(new RunCommand(algaeMech::intake, algaeMech));
+    ps4Controller.L1().whileTrue(new RunCommand(swerve::lock, swerve));
+    ps4Controller.L2().whileTrue(new RunCommand(swerve::test0Voltage, swerve));
+    ps4Controller.R2().whileTrue(new RunCommand(swerve::testHalfPower, swerve));
+    ps4Controller.R1().whileTrue(new RunCommand(algaeMech::intake, algaeMech));
   }
 
   /**
