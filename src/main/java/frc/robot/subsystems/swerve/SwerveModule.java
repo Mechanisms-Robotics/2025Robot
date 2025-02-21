@@ -43,6 +43,7 @@ public class SwerveModule extends SubsystemBase {
 
     /* Default to open loop. Closed loop is used for PID control over the driving rather than just the steering. */
     private boolean closedLoop = false;
+    private static final double gearRatio = 6.14;
 
     private double desiredVelocity = 0.0; // m/s
     private double currentVelocity = 0.0;
@@ -139,8 +140,13 @@ public class SwerveModule extends SubsystemBase {
 
     @Override
     public void periodic() {
+        SmartDashboard.putNumber(moduleName + "/CANcoder/absolute position", canCoder.getAbsolutePosition().getValueAsDouble());
+        SmartDashboard.putNumber(moduleName + "/CANcoder/position", canCoder.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber(moduleName + "/CANcoder/id", canCoder.getDeviceID());
+        SmartDashboard.putNumber(moduleName + "/CANcoder/velocity", canCoder.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber(moduleName + "/CANcoder/supply voltage", canCoder.getSupplyVoltage().getValueAsDouble());
         if (Robot.isSimulation()) {
-            currentAngle = new Rotation2d(steerPidController.getSetpoint() + steerOffset);
+            currentAngle = new Rotation2d(steerPidController.getSetpoint() * gearRatio + steerOffset);
         } else {
             currentAngle = new Rotation2d(canCoder.getAbsolutePosition().getValueAsDouble() + steerOffset);
         }
