@@ -32,6 +32,7 @@ public class Swerve extends SubsystemBase {
     /* Pigeon 2 gyro. For the swerve so it can tell how fast it is moving.
        This is used to calculate PID values and for autonomous */ 
     private final Pigeon2 gyro = new Pigeon2(0);
+    private boolean fieldOriented = true;
     private final double width = Units.inchesToMeters(27);
     private final double length = Units.inchesToMeters(32+1/16);
     /* Swerve module locations, used by the program to compute kinematics going from a
@@ -120,9 +121,15 @@ public class Swerve extends SubsystemBase {
       * @param omega angular momentum
       */
     public void drive(double vx, double vy, double omega) {
+        SmartDashboard.putNumber("Swerve/vx", vx);
+        SmartDashboard.putNumber("Swerve/vy", vy);
+        SmartDashboard.putNumber("Swerce/omega", omega);
         // TODO add deadband
         // Computes math needed to get the motor outputs for each swerve module from the desired velocity and direction
-        SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(vx, vy, omega));
+        // consider stabalize
+        SwerveModuleState[] states = kinematics.toSwerveModuleStates(
+            fieldOriented ? ChassisSpeeds.fromFieldRelativeSpeeds(vx, vy, omega, getHeading())
+            : new ChassisSpeeds(vx, vy, omega));
         /* Desaturates wheel speeds, stops motors from going faster than they are able to which can happen in certain
            some swerve orientations that force some motors to dominate */
         SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.maxVelocity);
@@ -166,11 +173,19 @@ public class Swerve extends SubsystemBase {
               percentOmega.get() * Constants.maxAngularVelocity);
     }
 
+    public void lock() {
+        flModule.steerTo(Rotation2d.fromDegrees(45));
+        frModule.steerTo(Rotation2d.fromDegrees(-45));
+        blModule.steerTo(Rotation2d.fromDegrees(45));
+        brModule.steerTo(Rotation2d.fromDegrees(-45));
+        System.out.println("Locking");
+    }
+
     public void setModuleStates(SwerveModuleState[] states) {
-        flModule.setState(states[0]);
-        frModule.setState(states[1]);
-        blModule.setState(states[2]);
-        brModule.setState(states[3]);
+        // flModule.setState(states[0]);
+        // frModule.setState(states[1]);
+        // blModule.setState(states[2]);
+        // brModule.setState(states[3]);
     }
 
     public SwerveModulePosition[] getModulePositions() {

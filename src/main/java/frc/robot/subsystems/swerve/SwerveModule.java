@@ -121,6 +121,10 @@ public class SwerveModule extends SubsystemBase {
         );
     }
 
+    public void steerTo(Rotation2d angle) {
+        desiredAngle = angle;
+    }
+
     /**
      *
      * @param closedLoop
