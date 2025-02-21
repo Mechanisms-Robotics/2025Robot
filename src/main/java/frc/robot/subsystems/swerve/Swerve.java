@@ -69,7 +69,7 @@ public class Swerve extends SubsystemBase {
      private final SwerveModule brModule = new SwerveModule("BR Module",
              4, 8,
              false, false,
-             5, 0);
+             8, 0);
 
      private Rotation2d simHeading = new Rotation2d();
 
