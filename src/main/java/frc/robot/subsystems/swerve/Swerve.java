@@ -50,20 +50,20 @@ public class Swerve extends SubsystemBase {
     private final Field2d field = new Field2d();
 
      // all these values are subject to change
-     private final SwerveModule flModule = new SwerveModule("FL Module",
+     private final SwerveModule frModule = new SwerveModule("FR Module",
              1, 5,
              false, false,
              5, 0);
 
-     private final SwerveModule frModule = new SwerveModule("FR Module",
+     private final SwerveModule flModule = new SwerveModule("FL Module",
              2, 6,
              false, false,
-             5, 0);
+             6, 0);
 
      private final SwerveModule blModule = new SwerveModule("BL Module",
              3, 7,
              false, false,
-             5, 0);
+             7, 0);
 
      private final SwerveModule brModule = new SwerveModule("BR Module",
              4, 8,
