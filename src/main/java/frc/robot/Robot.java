@@ -69,8 +69,8 @@ public class Robot extends TimedRobot {
         swerve.setDefaultCommand(
            // TODO these arguments are wrong, figure it out
             new RunCommand(() -> swerve.teleopDrive(
+               ()->ps4Controller.getLeftY(),
                ()->-ps4Controller.getLeftX(),
-               ()->-ps4Controller.getLeftY(),
                ()->-ps4Controller.getRightX()
            ), swerve)
         );

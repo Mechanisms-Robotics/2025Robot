@@ -137,7 +137,7 @@ public class Swerve extends SubsystemBase {
     public void drive(double vx, double vy, double omega) {
         SmartDashboard.putNumber("Swerve/vx", vx);
         SmartDashboard.putNumber("Swerve/vy", vy);
-        SmartDashboard.putNumber("Swerce/omega", omega);
+        SmartDashboard.putNumber("Swerve/omega", omega);
         // TODO add deadband
         // Computes math needed to get the motor outputs for each swerve module from the desired velocity and direction
         // consider stabalize
@@ -173,7 +173,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public double deadband(double input) {
-        return Math.abs(input) >= .1 ? input : 0;
+        return Math.abs(input) >= .05 ? input : 0;
     }
 
      /**

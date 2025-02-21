@@ -1,10 +1,12 @@
 package frc.robot.subsystems.swerve;
 
+import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -32,7 +34,7 @@ public class SwerveModule extends SubsystemBase {
             new PIDController(1, 0, 0);
 
     private final ProfiledPIDController drivePpidController =
-            new ProfiledPIDController(1, 0, 0, new Constraints(0.0, 0.0));
+            new ProfiledPIDController(0, 0, 0, new Constraints(0.0, 0.0));
 
     private final PIDController steerPidController = new PIDController(0.25, 0, 0);
 
@@ -78,7 +80,7 @@ public class SwerveModule extends SubsystemBase {
         SmartDashboard.putData(this.moduleName + "/Steer Profiled PID Controller", steerPpidController);    
         SmartDashboard.putData(this.moduleName + "/Steer Feedforward", steerPpidController);
         
-        // Configure motors
+        // Configure motors, unsuccessfull
         SparkMaxConfig steerConfig = new SparkMaxConfig();
         steerConfig
             .inverted(steerInverted)
@@ -88,14 +90,24 @@ public class SwerveModule extends SubsystemBase {
 
         TalonFXConfiguration driveConfig = new TalonFXConfiguration();
         driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        if (driveInverted) {
-            driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-        } else {
+
+        if (driveInverted) {
             driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        } else {
+            driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         }
         
         driveMotor.getConfigurator().apply(driveConfig);
+
+        // attempted cancoder config didn't work
+        // MagnetSensorConfigs canCoderConfig = new MagnetSensorConfigs();
+        // if (steerInverted) {
+        //     canCoderConfig.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+        // } else {
+        //     canCoderConfig.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+        // }
+        // canCoder.getConfigurator().apply(canCoderConfig);
 
         // steerPidController.enableContinuousInput(0, 180);
     }
