@@ -12,8 +12,10 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 
+import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.simulation.WPIElevator;
 
 public class Elevator extends SubsystemBase {
     // TODO: Set soft limits
@@ -21,6 +23,7 @@ public class Elevator extends SubsystemBase {
 
     // Elevator positions in encoder tics
     // TODO: Determine experimentally and then put an equation for offline estimation of changes and put that here for posterity
+    // TODO: We may need separate levels (or an offset) for algae vs. coral
     public final int RESTING = 0; // TODO make sure powered down completely when resting or very low to avoid power draw
     public final int PROCESSOR = 0;
     public final int LOADING = 0;
@@ -39,17 +42,53 @@ public class Elevator extends SubsystemBase {
     private final SparkMax m_follower;
 
     // The throughbore encoder is on the leader
-    private final RelativeEncoder m_output_encoder;
+    private final RelativeEncoder m_outputEncoder;
 
     // REV's built-in PID controller on the leader
     private final SparkClosedLoopController m_sparkClosedLoopController;
 
-    // PID gains TODO: Tune
+    // Elevator motion tunables TODO: Tune and clean up comments and all
+    private static final double MAX_ACCEL = 0.0; // In RPM/s
+    private static final double MAX_VEL = 0.0; // In RPM
+    private static final double ALLOWED_ERROR = 0.0; // In encoder tics
     private static final double KP = 0.0;
     private static final double KI = 0.0;
     private static final double KD = 0.0;
-    private static final double MIN_OUTPUT = 0.0;
-    private static final double MAX_OUTPUT = 0.0;
+    private static final double MIN_OUTPUT = 0.0; // Volts
+    private static final double MAX_OUTPUT = 0.0; // Volts
+    private static final double KA = 0.0; // Acceleration feedforward Volts per something
+    private static final double KS = 0.0; // Constant of static friction or whatever
+    private static final double KG = 0.0; // Volts required to overcome gravity
+    private static final double KV = 0.0; // Velocity constant in Volts per distance per second
+
+    /* TUNING PROCEDURE
+
+    Ref Motion Profiled, Feedforward, and Feedback Control
+    at https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-elevator.html#motion-profiled-feedforward-and-feedback-control
+
+    NOTE THAT I DIDN'T FINISH THIS, SO GO BACK THROUGH MONDAY AND REWORK BASED ON ABOVE
+    STARTING AROUND STEP 10.
+
+    1. Set the CAN IDs in this code
+    2. Run this code on the robot to set leader and follower, etc.
+    3. Using the Rev hardware client, verify the leader ond follower
+        configuration, especially the inversion of the follower. Power the
+        leader at low power in the hardware client and see that the elevator
+        moves up and down.
+    4. Determine the bottom and top soft limits using the Rev hardward client
+       and then set the soft
+       limits in this code based on that. Run that code one the RoboRIO to
+       put those limits on the motor controllers.
+    5. Use the Rev hardware client to check that the soft limits stuck. Run
+       it up and down to make sure it respects the soft limits.
+    6. Set MAX_ACCEL to something low like 1 RPM/s.
+    7. Set MAX_VEL to something like 60 RPM.
+    8. Set ALLOWED_ERROR to something like 50 (the encoder has 8192 tics / revolution)
+    9. Set MAX_OUTPUT to 6 V.
+    10. Adjust KG until the elevator just starts to stuggle to lift.
+    11. Increase KV 
+    
+     */
 
     /**
      * Constructs the Elevator subsystem.
@@ -68,6 +107,11 @@ public class Elevator extends SubsystemBase {
         SparkMaxConfig leaderConfig = new SparkMaxConfig();
         SparkMaxConfig followerConfig = new SparkMaxConfig();
 
+        leaderConfig.closedLoop.maxMotion
+            .maxAcceleration(MAX_ACCEL)
+            .maxVelocity(MAX_VEL)
+            .allowedClosedLoopError(ALLOWED_ERROR);
+
         leaderConfig.closedLoop
             .p(KP)
             .i(KI)
@@ -80,7 +124,7 @@ public class Elevator extends SubsystemBase {
         m_follower.configure(followerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // Get the encoder from the leader (the throughbore encoder on the output shaft)
-        m_output_encoder = m_leader.getAlternateEncoder();
+        m_outputEncoder = m_leader.getAlternateEncoder();
 
         // The onboard controller
         m_sparkClosedLoopController = m_leader.getClosedLoopController();
@@ -92,13 +136,17 @@ public class Elevator extends SubsystemBase {
      * @param position The target position
      */
     public void setTargetPosition(double position) {
-        double feed_forward = 0.0; // TODO and may be different going down
+        ElevatorFeedforward feedforward = new ElevatorFeedforward(
+            KS, KG, KV, KA);
 
-        m_sparkClosedLoopController.setReference(
-            position,
-            ControlType.kPosition,
-            ClosedLoopSlot.kSlot0, // TODO
-            feed_forward);
+        // TODO: This ain't right
+        // double ff = feedforward.calculate(m_sparkClosedLoopController.)
+
+        // m_sparkClosedLoopController.setReference(
+        //     position,
+        //     ControlType.kMAXMotionPositionControl,
+        //     ClosedLoopSlot.kSlot0, // TODO This allows multiple PID constants
+        //     ff);
     }
 
     /**
@@ -107,7 +155,7 @@ public class Elevator extends SubsystemBase {
      * @return The current position
      */
     public double getCurrentPosition() {
-        return m_output_encoder.getPosition();
+        return m_outputEncoder.getPosition();
     }
 
     @Override
