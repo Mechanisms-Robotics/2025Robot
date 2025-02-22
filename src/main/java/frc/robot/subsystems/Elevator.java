@@ -63,6 +63,16 @@ public class Elevator extends SubsystemBase {
 
     /* TUNING PROCEDURE
 
+    NOTE: This is going to change see https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html
+
+    Alex says to use velocity control, not max motion. The motion profile will trapezodial and
+    will happen in this code (see link above). When we get a new position setpoint, we create
+    a trapezoidal profile using the WPILib class (you feed it current position and desired position).
+    In the periodic, we sample the profile and get a desired velocity and acceleration based on the
+    current position (or maybe time, more likely). We feed that into the Feedforward class (see below)
+    and pass the desired velocity and the arbitrary feedforward to the SparkMax which is running
+    and onboard velocity PID.
+
     Ref Motion Profiled, Feedforward, and Feedback Control
     at https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-elevator.html#motion-profiled-feedforward-and-feedback-control
 
